@@ -1,103 +1,90 @@
-# Solicitations Search
+# Solicitations Matcher
 
-Next.js 14 app (App Router, TypeScript, Tailwind CSS) for AI-powered search across federal solicitations stored in Google Sheets.
+A Next.js website that interviews a company, matches them against federal solicitations from the **Gov Events & Opportunities** PDF catalog, researches each opportunity, scores likelihood of acceptance, and produces a one-page recommendation report.
 
 ## Data source
 
-- **Sheet ID:** `1JOqnwfQAYf33qiXPfMA-DrfBO-n3TRoRUt3Gtqn5j5Q`
-- **Tab:** `Solicitations`
+Solicitations are loaded from a parsed local database:
 
-## Setup
+- **PDF:** `data/Gov_Events_Opportunities.pdf`
+- **JSON catalog:** `data/solicitations.json` (generated via `npm run parse-pdf`)
+
+When the PDF is updated, re-run `npm run parse-pdf` to refresh the database.
+
+## Quick start
 
 ```bash
-npm install
-cp .env.example .env.local
-# Fill in env vars (see below)
+npm run setup
+# Edit .env.local — set ANTHROPIC_API_KEY
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000) → **Start company analysis**.
 
 ## Environment variables
 
 | Variable | Purpose |
 |---|---|
-| `GOOGLE_SERVICE_ACCOUNT_JSON` | Service account credentials JSON (stringified). Share the sheet with the SA email. |
-| `ANTHROPIC_API_KEY` | Claude API key for AI search |
-| `GOOGLE_CLIENT_ID` | Google OAuth client ID (calendar — upcoming) |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret (calendar — upcoming) |
-| `NEXTAUTH_SECRET` | NextAuth session secret (calendar — upcoming) |
-| `NEXTAUTH_URL` | App URL, e.g. `http://localhost:3000` |
+| `ANTHROPIC_API_KEY` | Claude API for matching, summaries, scoring, and reports |
+
+## User flow
+
+1. **Home** — overview of the 4-step process
+2. **`/analyze`** — multi-step company questionnaire
+3. **Analysis pipeline** — matches top solicitations, scrapes links, generates summaries + acceptance scores
+4. **`/report`** — executive summary, ranked recommendations, deep dives
+
+## Refresh the solicitations database
+
+Replace or update `data/Gov_Events_Opportunities.pdf`, then:
+
+```bash
+npm run parse-pdf
+```
+
+Verify: `GET http://localhost:3000/api/database`
 
 ## API
 
-### `POST /api/search`
+### `POST /api/analyze`
 
-AI search with optional filters.
+Body: `CompanyProfile` (see `src/lib/company/questionnaire.ts`)
 
-```json
-{
-  "query": "solar energy SBIR",
-  "filters": {
-    "department": "Air Force",
-    "solicitationType": "SBIR",
-    "company": "Swift Solar"
-  }
-}
-```
+Returns: `AnalysisResult` with matched opportunities, summaries, acceptance scores, and final report.
 
-Returns:
+### `GET /api/database`
 
-```json
-{
-  "results": [
-    {
-      "title": "...",
-      "department": "...",
-      "dueDate": "...",
-      "org": "...",
-      "type": "...",
-      "descriptionSnippet": "...",
-      "link": "...",
-      "companyFlags": { "Swift Solar": true }
-    }
-  ]
-}
-```
-
-### `GET /api/search?q=...`
-
-Simple query-string search (no filters).
+Returns catalog metadata (source PDF, row count, last parsed time).
 
 ## Project structure
 
 ```
+data/
+├── Gov_Events_Opportunities.pdf   # Source catalog
+└── solicitations.json             # Parsed database (committed)
+scripts/
+└── parse-pdf.cjs                  # PDF → JSON parser
 src/
 ├── app/
-│   ├── api/
-│   │   └── search/
-│   │       └── route.ts      # AI search endpoint
-│   ├── globals.css
-│   ├── layout.tsx
-│   └── page.tsx
-└── lib/
-    ├── ai/
-    │   └── search.ts         # Anthropic integration
-    ├── google/
-    │   └── sheets.ts         # Google Sheets API client
-    └── solicitations/
-        ├── constants.ts      # Sheet ID, columns, filter options
-        ├── filters.ts        # Department / type / company filters
-        └── types.ts
+│   ├── page.tsx                   # Landing
+│   ├── analyze/page.tsx           # Company questionnaire
+│   ├── report/page.tsx            # Results report
+│   └── api/
+│       ├── analyze/route.ts
+│       └── database/route.ts
+├── lib/
+│   ├── data/solicitations-store.ts  # Loads JSON catalog
+│   ├── pipeline/analyze.ts          # Orchestrator
+│   ├── matching/
+│   ├── research/
+│   ├── scoring/
+│   └── reporting/
 ```
-
-## Auth strategy
-
-- **Sheets read:** service account (`GOOGLE_SERVICE_ACCOUNT_JSON`) — no user login
-- **Calendar write:** Google OAuth via NextAuth.js (upcoming)
 
 ## Roadmap
 
-- [x] Folder structure + `/api/search`
-- [ ] Filter UI on the homepage
-- [ ] `/api/add-to-calendar` + NextAuth Google OAuth
+- [x] PDF-based solicitations database
+- [x] Company intake + AI matching pipeline
+- [ ] Improve PDF column parsing (descriptions, full URLs)
+- [ ] Web search API for supplemental research
+- [ ] PDF export of final report

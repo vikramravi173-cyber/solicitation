@@ -5,8 +5,9 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Solicitations Search",
-  description: "AI-powered search for federal solicitations from Google Sheets",
+  title: "Solicitations Matcher",
+  description:
+    "Match your company to federal solicitations with AI research, acceptance scoring, and one-page recommendation reports.",
 };
 
 export default function RootLayout({
