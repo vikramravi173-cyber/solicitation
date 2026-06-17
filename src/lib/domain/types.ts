@@ -1,4 +1,6 @@
 import type { CompanyProfile } from "@/lib/company/questionnaire";
+import type { SolicitationProfile } from "@/lib/reporting/build-solicitation-profile";
+import type { TailoredOpportunityReport } from "@/lib/reporting/tailor-to-company";
 import type { SolicitationRow } from "@/lib/solicitations/types";
 
 export interface MatchedSolicitation {
@@ -21,6 +23,9 @@ export interface ScrapedContent {
 export interface OpportunitySummary {
   solicitationNumber: string;
   title: string;
+  profile: SolicitationProfile;
+  tailored: TailoredOpportunityReport;
+  synthesizedBrief: string;
   onePageSummary: string;
   keyRequirements: string[];
   fitHighlights: string[];
@@ -55,6 +60,7 @@ export interface FinalReport {
     link: string;
     likelihoodScore: number;
     likelihoodLabel: AcceptanceAssessment["likelihoodLabel"];
+    pursuitRecommendation: string;
     whyRecommended: string;
   }>;
   overallStrategy: string;
@@ -64,6 +70,7 @@ export interface FinalReport {
 export interface AnalysisResult {
   id: string;
   company: CompanyProfile;
+  catalogProfileCount: number;
   analyzedOpportunities: AnalyzedOpportunity[];
   report: FinalReport;
 }

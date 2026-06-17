@@ -13,18 +13,10 @@ fi
 
 echo "Using Node $(node -v)"
 
-if [ ! -f .env.local ]; then
-  cp .env.example .env.local
-  echo "Created .env.local — add ANTHROPIC_API_KEY before running analysis."
-else
-  echo ".env.local already exists."
-fi
-
 npm install
 npm run parse-pdf
 
 echo ""
 echo "Next steps:"
-echo "  1. Edit .env.local with ANTHROPIC_API_KEY"
-echo "  2. npm run dev"
-echo "  3. Open http://localhost:3000 and start a company analysis"
+echo "  npm run dev"
+echo "  Open http://localhost:3000"

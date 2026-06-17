@@ -43,8 +43,7 @@ async function fetchPageText(url: string): Promise<{ title: string; text: string
 async function searchSupplementalSources(
   query: string,
 ): Promise<ScrapedContent["supplementalSources"]> {
-  // Framework hook: plug in a search API (Brave, SerpAPI, etc.) later.
-  // For now return empty; Claude still works from sheet + solicitation URL.
+  // Framework hook: plug in a search API later if needed.
   void query;
   return [];
 }

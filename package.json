@@ -4,14 +4,17 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:clean": "bash scripts/dev-clean.sh",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "parse-pdf": "node scripts/parse-pdf.cjs",
-    "setup": "bash scripts/setup.sh && npm run parse-pdf"
+    "generate-profiles": "node scripts/generate-profiles.cjs",
+    "setup": "bash scripts/setup.sh && npm run parse-pdf && npm run generate-profiles",
+    "vercel:preview": "vercel",
+    "vercel:deploy": "vercel --prod"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.39.0",
     "next": "14.2.29",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

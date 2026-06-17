@@ -1,36 +1,89 @@
-import { askClaudeJson } from "@/lib/ai/client";
 import type { CompanyProfile } from "@/lib/company/questionnaire";
-import type { OpportunitySummary, ScrapedContent } from "@/lib/domain/types";
+import { federalExperienceText } from "@/lib/company/questionnaire";
+import type {
+  AcceptanceAssessment,
+  MatchedSolicitation,
+  OpportunitySummary,
+  ScrapedContent,
+} from "@/lib/domain/types";
+import { overlapScore } from "@/lib/matching/text-utils";
+import { departmentMatchesTarget } from "@/lib/matching/department-match";
+import type { SolicitationProfile } from "@/lib/reporting/build-solicitation-profile";
+import { buildSolicitationProfile } from "@/lib/reporting/build-solicitation-profile";
+import { synthesizeNarrative } from "@/lib/reporting/synthesize-text";
+import { tailorProfileToCompany } from "@/lib/reporting/tailor-to-company";
 import type { SolicitationRow } from "@/lib/solicitations/types";
 
 export async function summarizeOpportunity(
   company: CompanyProfile,
   solicitation: SolicitationRow,
   research: ScrapedContent,
+  match: MatchedSolicitation,
+  acceptance: AcceptanceAssessment,
+  profileInput?: SolicitationProfile,
 ): Promise<OpportunitySummary> {
-  const prompt = `You are a federal capture strategist.
+  const profile = profileInput ?? buildSolicitationProfile(solicitation, research);
+  const tailored = tailorProfileToCompany(company, profile, match, acceptance);
 
-Write a one-page opportunity summary for this company and solicitation. Use the sheet data, scraped solicitation page, and any supplemental sources.
+  const fitScore = overlapScore(
+    company.technologyAndCapabilities,
+    [profile.displayTitle, profile.keyWords, profile.summary].join(" "),
+  );
 
-Respond with valid JSON only:
-{
-  "solicitationNumber": string,
-  "title": string,
-  "onePageSummary": string (3-5 paragraphs, executive-ready),
-  "keyRequirements": string[],
-  "fitHighlights": string[],
-  "risksAndGaps": string[],
-  "sourcesUsed": string[]
-}
+  const fitHighlights: string[] = [];
+  if (fitScore >= 0.3) {
+    fitHighlights.push("Technology keywords overlap with your stated capabilities.");
+  }
+  if (departmentMatchesTarget(company.targetDepartments, solicitation.department)) {
+    fitHighlights.push(`Targets your preferred department: ${solicitation.department}.`);
+  }
+  if (
+    federalExperienceText(company).includes("sbir") &&
+    solicitation.solicitationType.toLowerCase().includes("sbir")
+  ) {
+    fitHighlights.push("SBIR/STTR alignment with your award history.");
+  }
+  if (profile.portfolioFlags.length > 0) {
+    fitHighlights.push(`Catalog flags relevance for: ${profile.portfolioFlags.join(", ")}.`);
+  }
+  if (fitHighlights.length === 0) {
+    fitHighlights.push("Potential adjacency based on federal market focus and catalog metadata.");
+  }
 
-Company:
-${JSON.stringify(company, null, 2)}
+  const keyRequirements: string[] = [];
+  if (profile.applicants) keyRequirements.push(`Eligible applicants: ${profile.applicants}`);
+  if (profile.solicitationType) {
+    keyRequirements.push(`Solicitation type: ${profile.solicitationType}`);
+  }
+  if (profile.organization) {
+    keyRequirements.push(`Issuing organization: ${profile.organization}`);
+  }
+  if (profile.dueDate) keyRequirements.push(`Due date: ${profile.dueDate}`);
+  if (profile.solicitationNumber) {
+    keyRequirements.push(`Solicitation #: ${profile.solicitationNumber}`);
+  }
 
-Solicitation (sheet):
-${JSON.stringify(solicitation, null, 2)}
+  const risksAndGaps = [...tailored.risksForCompany];
+  if (!profile.link) risksAndGaps.push("No solicitation URL in catalog — verify details manually.");
+  if (fitScore < 0.2) risksAndGaps.push("Low keyword overlap — may require teaming or scope stretch.");
 
-Research:
-${JSON.stringify(research, null, 2)}`;
+  const synthesizedBrief = synthesizeNarrative(
+    [profile.synthesizedOverview, tailored.fullBrief].filter(Boolean),
+    ["Based on your profile,"],
+  );
 
-  return askClaudeJson<OpportunitySummary>(prompt, 6000);
+  const onePageSummary = synthesizedBrief;
+
+  return {
+    solicitationNumber: profile.solicitationNumber,
+    title: profile.displayTitle,
+    profile,
+    tailored,
+    synthesizedBrief,
+    onePageSummary,
+    keyRequirements,
+    fitHighlights,
+    risksAndGaps,
+    sourcesUsed: profile.sourcesUsed,
+  };
 }
