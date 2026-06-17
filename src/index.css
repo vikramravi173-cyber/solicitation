@@ -1,0 +1,149 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-ink text-mist font-sans antialiased;
+    font-feature-settings: "cv05" 1, "ss01" 1;
+  }
+
+  ::selection {
+    background: rgba(199, 154, 75, 0.28);
+    color: #fff;
+  }
+
+  /* Tabular figures everywhere data lives */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+
+  *:focus-visible {
+    outline: 2px solid theme("colors.teal");
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* Custom scrollbar — quiet, instrument-like */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: theme("colors.line");
+    border-radius: 99px;
+    border: 3px solid theme("colors.ink");
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: theme("colors.line-bright");
+  }
+}
+
+@layer components {
+  /* Eyebrow / section label — the structural device */
+  .eyebrow {
+    @apply font-mono text-[11px] uppercase tracking-eyebrow text-brass;
+  }
+  .eyebrow-muted {
+    @apply font-mono text-[11px] uppercase tracking-eyebrow text-faint;
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-mono text-[13px] font-medium
+           tracking-wide transition-all duration-150 select-none
+           disabled:opacity-40 disabled:pointer-events-none;
+  }
+  .btn-primary {
+    @apply btn bg-brass text-ink px-5 py-2.5 hover:bg-brass-bright
+           active:translate-y-px;
+  }
+  .btn-ghost {
+    @apply btn border border-line text-mist px-5 py-2.5 hover:border-line-bright
+           hover:bg-panel-2 active:translate-y-px;
+  }
+  .btn-quiet {
+    @apply btn text-muted px-3 py-2 hover:text-mist;
+  }
+
+  /* Inputs */
+  .field {
+    @apply w-full bg-panel-2 border border-line text-mist placeholder:text-faint
+           px-3.5 py-2.5 font-sans text-[15px] transition-colors
+           focus:border-teal-dim focus:bg-panel hover:border-line-bright;
+  }
+  textarea.field {
+    @apply leading-relaxed resize-y min-h-[120px];
+  }
+
+  /* Panels */
+  .panel {
+    @apply bg-panel border border-line;
+  }
+
+  /* Hairline divider with a notch — schematic feel */
+  .rule {
+    @apply h-px w-full bg-line;
+  }
+
+  /* Duotone documentary imagery — integrates stock photos into the palette */
+  .duotone {
+    filter: grayscale(1) contrast(1.05) brightness(0.62) sepia(0.32)
+      hue-rotate(8deg);
+  }
+}
+
+@layer utilities {
+  .deck-grid-bg {
+    background-image:
+      linear-gradient(to right, rgba(42, 58, 51, 0.35) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(42, 58, 51, 0.35) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+  .scrim-bottom {
+    background: linear-gradient(
+      180deg,
+      rgba(14, 21, 18, 0.2) 0%,
+      rgba(14, 21, 18, 0.55) 45%,
+      rgba(14, 21, 18, 0.96) 100%
+    );
+  }
+  .scrim-left {
+    background: linear-gradient(
+      90deg,
+      rgba(14, 21, 18, 0.96) 0%,
+      rgba(14, 21, 18, 0.7) 40%,
+      rgba(14, 21, 18, 0.25) 100%
+    );
+  }
+}
+
+/* Print: the dossier is the deliverable */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

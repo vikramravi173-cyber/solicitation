@@ -1,34 +1,29 @@
 {
   "name": "solicitations-matcher",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "dev:clean": "bash scripts/dev-clean.sh",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "parse-pdf": "node scripts/parse-pdf.cjs",
-    "generate-profiles": "node scripts/generate-profiles.cjs",
-    "setup": "bash scripts/setup.sh && npm run parse-pdf && npm run generate-profiles",
-    "vercel:preview": "vercel",
-    "vercel:deploy": "vercel --prod"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "parse-pdf": "node scripts/parse-pdf.cjs"
   },
   "dependencies": {
-    "next": "14.2.29",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2"
   },
   "devDependencies": {
     "@types/node": "^20.17.24",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.21",
-    "eslint": "^8.57.1",
-    "eslint-config-next": "14.2.29",
     "pdf-parse": "^2.4.5",
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "vite": "^5.4.10"
   }
 }
