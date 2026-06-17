@@ -4,7 +4,7 @@ import { fileURLToPath, URL } from "node:url";
 
 // GitHub Pages serves project sites under /<repo>/. The base is applied only
 // for production builds so local dev stays at "/".
-const REPO_BASE = "/google-sheet-searcher-agent/";
+const REPO_BASE = "/solicitation/";
 
 export default defineConfig(({ command }) => ({
   base: command === "build" ? REPO_BASE : "/",
