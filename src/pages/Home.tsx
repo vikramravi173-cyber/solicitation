@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { SOLICITATIONS, CATALOG_META } from "@/data/solicitations";
+import { BookWithBret } from "@/components/BookWithBret";
 import { Registry } from "@/components/Registry";
 import { OpportunityDrawer } from "@/components/OpportunityDrawer";
 import type { SolicitationRow } from "@/lib/solicitations/types";
@@ -120,8 +121,8 @@ export function HomePage() {
             <ul className="mt-6 space-y-4">
               <Method
                 n="01"
-                head="Keyword & domain overlap"
-                body="Your capabilities are tokenized and compared against each solicitation's title, focus areas, and metadata."
+                head="Fuzzy text match"
+                body="Your query is matched against each solicitation's title, focus areas, and metadata — typos and partial terms included."
               />
               <Method
                 n="02"
@@ -159,6 +160,13 @@ export function HomePage() {
               </Link>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ── Book with Bret ───────────────────────────────────── */}
+      <section id="book-with-bret" className="border-t border-line bg-panel/40">
+        <div className="mx-auto max-w-deck px-5 py-14 scroll-mt-16">
+          <BookWithBret />
         </div>
       </section>
 

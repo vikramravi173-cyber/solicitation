@@ -11,7 +11,7 @@ import {
   matchSolicitations,
   solicitationSearchCorpus,
 } from "@/lib/matching/match-solicitations";
-import { overlapScore } from "@/lib/matching/text-utils";
+import { fuzzyScore } from "@/lib/matching/text-utils";
 import { companyProfileFromKeywords } from "@/lib/company/keyword-profile";
 import { resolveDisplayTitle } from "@/lib/solicitations/display-title";
 import { buildFinalReport } from "@/lib/reporting/build-report";
@@ -105,13 +105,11 @@ function buildKeywordMatch(
   solicitation: SolicitationRow,
 ): MatchedSolicitation {
   const displayTitle = resolveDisplayTitle(solicitation);
-  const score = Math.round(
-    overlapScore(query, solicitationSearchCorpus(solicitation)) * 100,
-  );
+  const score = Math.round(fuzzyScore(query, solicitationSearchCorpus(solicitation)) * 100);
   return {
     solicitation,
     matchScore: Math.min(100, Math.max(0, score)),
-    matchRationale: `Keyword search for "${query}" matched this opportunity's title, focus areas, and catalog metadata (${displayTitle}).`,
+    matchRationale: `Fuzzy search for "${query}" matched this opportunity's title, focus areas, and catalog metadata (${displayTitle}).`,
   };
 }
 
@@ -134,7 +132,7 @@ export async function runKeywordOpportunityAnalysis(
   const report = await buildFinalReport(company, [opportunity], solicitations.length);
 
   report.executiveSummary = synthesizeSentences([
-    `Closest catalog match for "${trimmed}" is ${displayTitle} (${solicitation.department}, due ${formatDueDate(solicitation.dueDate)}) at ${match.matchScore}% keyword relevance.`,
+    `Closest catalog match for "${trimmed}" is ${displayTitle} (${solicitation.department}, due ${formatDueDate(solicitation.dueDate)}) at ${match.matchScore}% fuzzy relevance.`,
     `Estimated fit for a generic applicant is ${opportunity.acceptance.likelihoodScore}% (${opportunity.acceptance.likelihoodLabel.toLowerCase()}). Recommendation: ${opportunity.summary.tailored.pursuitRecommendation.toLowerCase()}.`,
     "The brief below covers eligibility, funding, requirements, and tailored guidance for this opportunity.",
   ]);

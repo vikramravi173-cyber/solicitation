@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import type { SolicitationRow } from "@/lib/solicitations/types";
 import { resolveDisplayTitle } from "@/lib/solicitations/display-title";
+import { solicitationSearchCorpus } from "@/lib/matching/match-solicitations";
+import { fuzzyScore } from "@/lib/matching/text-utils";
 import { field, meaningful } from "@/lib/ui/format";
 
 type SortKey = "department" | "title" | "type" | "due";
@@ -36,22 +38,11 @@ export function Registry({
   });
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = query.trim();
     let out = rows.filter((r) => {
       if (dept && !r.department.toLowerCase().includes(dept.toLowerCase())) return false;
       if (!q) return true;
-      return [
-        resolveDisplayTitle(r),
-        r.department,
-        r.solicitationType,
-        r.keyWords,
-        r.organization,
-        r.solicitationNumber,
-        r.applicants,
-      ]
-        .join(" ")
-        .toLowerCase()
-        .includes(q);
+      return fuzzyScore(q, solicitationSearchCorpus(r)) >= 0.15;
     });
 
     out = [...out].sort((a, b) => {
@@ -87,7 +78,7 @@ export function Registry({
           <input
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
-            placeholder="Filter by keyword, agency, topic…"
+            placeholder="Filter by topic, agency, typo-tolerant…"
             className="field pl-9"
             aria-label="Filter the catalog"
           />
@@ -182,7 +173,7 @@ export function Registry({
                 <td colSpan={4} className="px-4 py-16 text-center">
                   <p className="text-muted">No solicitations match those filters.</p>
                   <p className="mt-1 font-mono text-[12px] text-faint">
-                    Try a broader keyword or clear the agency filter.
+                    Try a broader term or clear the agency filter.
                   </p>
                 </td>
               </tr>
