@@ -9,8 +9,8 @@ import { AnalyzePage } from "@/pages/Analyze";
 import { ReportPage } from "@/pages/Report";
 import { LobbyPage } from "@/pages/Lobby";
 import { AccountPage } from "@/pages/Account";
+import { RequireAuth } from "@/components/RequireAuth";
 
-// Mounts under the GitHub Pages project base in production, "/" in dev.
 const basename = import.meta.env.BASE_URL.replace(/\/$/, "") || "/";
 
 const router = createBrowserRouter(
@@ -19,10 +19,38 @@ const router = createBrowserRouter(
       element: <AppLayout />,
       children: [
         { path: "/", element: <HomePage /> },
-        { path: "/match", element: <AnalyzePage /> },
-        { path: "/report", element: <ReportPage /> },
-        { path: "/lobby", element: <LobbyPage /> },
-        { path: "/account", element: <AccountPage /> },
+        {
+          path: "/match",
+          element: (
+            <RequireAuth purpose="default">
+              <AnalyzePage />
+            </RequireAuth>
+          ),
+        },
+        {
+          path: "/report",
+          element: (
+            <RequireAuth purpose="default">
+              <ReportPage />
+            </RequireAuth>
+          ),
+        },
+        {
+          path: "/lobby",
+          element: (
+            <RequireAuth purpose="lobby">
+              <LobbyPage />
+            </RequireAuth>
+          ),
+        },
+        {
+          path: "/account",
+          element: (
+            <RequireAuth purpose="default">
+              <AccountPage />
+            </RequireAuth>
+          ),
+        },
       ],
     },
   ],

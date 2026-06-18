@@ -11,6 +11,10 @@ const PURPOSE_COPY: Record<string, { title: string; body: string }> = {
     title: "Sign in required",
     body: "This area requires an account.",
   },
+  lobby: {
+    title: "Sign in to use the lobby toolkit",
+    body: "Lobby campaigns and notes sync to your account when signed in.",
+  },
 };
 
 export function RequireAuth({
