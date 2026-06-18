@@ -64,7 +64,9 @@ if needed.
 
 ### 4. GitHub Pages (production)
 
-Add these **repository secrets** (Settings → Secrets and variables → Actions):
+The live site is **`https://vikramravi173-cyber.github.io/solicitation/`**, deployed from the **`vikramravi173-cyber/solicitation`** repo (not a fork with a different name). Push to that repo and add secrets **there**.
+
+Add these **repository secrets** (Settings → Secrets and variables → Actions on **`solicitation`**):
 
 | Secret | Value |
 |--------|--------|
