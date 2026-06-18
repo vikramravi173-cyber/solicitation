@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { RequireAuth } from "@/components/RequireAuth";
 import { LobbyProvider, useLobby } from "@/lib/lobby/context";
 import { exportCampaignJson } from "@/lib/lobby/storage";
 import type { LobbyTab } from "@/lib/lobby/types";
@@ -43,11 +42,9 @@ const VALID_TABS = new Set<string>(TABS.map((t) => t.id));
 
 export function LobbyPage() {
   return (
-    <RequireAuth purpose="lobby">
-      <LobbyProvider>
-        <LobbyPageInner />
-      </LobbyProvider>
-    </RequireAuth>
+    <LobbyProvider>
+      <LobbyPageInner />
+    </LobbyProvider>
   );
 }
 
@@ -99,8 +96,8 @@ function LobbyPageInner() {
             </h1>
             <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-mist/80">
               Draft NDAA requests, log staff outreach, generate emails, and work through the DIY
-              Lobbyist workflow — aligned with the Strogen authorization template. Sign in to save
-              your campaign to the cloud.
+              Lobbyist workflow — aligned with the Strogen authorization template. Your campaign
+              syncs to the cloud when Supabase is configured.
             </p>
 
             <div className="mt-6 flex flex-wrap items-center gap-3">

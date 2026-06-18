@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { useAuth } from "@/lib/supabase/AuthContext";
 import { addNote, deleteNote, fetchNotes, type Note } from "@/lib/supabase/notes";
 
@@ -78,16 +77,10 @@ export function AccountPage() {
         <div className="eyebrow">Account</div>
         <h1 className="mt-3 font-display text-3xl font-bold text-mist">Sign in required</h1>
         <p className="mt-3 text-[15px] text-muted">
-          Notes and your lobby campaign sync when signed in. The lobby toolkit requires an
-          account — use <strong className="text-mist">Sign in</strong> in the header or visit{" "}
-          <Link to="/lobby" className="text-brass hover:text-brass-bright">
-            /lobby
-          </Link>
-          .
+          Capture Deck requires an account when Supabase is configured. Use{" "}
+          <strong className="text-mist">Sign in</strong> in the header to access the catalog,
+          company match, and lobby toolkit.
         </p>
-        <Link to="/" className="btn-ghost mt-6 inline-flex py-2.5">
-          ← Back to home
-        </Link>
       </div>
     );
   }
@@ -100,8 +93,7 @@ export function AccountPage() {
           Welcome, {user.email}
         </h1>
         <p className="mt-3 text-[15px] text-muted">
-          Notes and your lobby campaign sync to your Supabase project. The lobby toolkit is only
-          available when signed in.
+          Notes and your lobby campaign sync to your Supabase project.
         </p>
       </header>
 

@@ -13,12 +13,12 @@ exposes your API key in the bundle).
 
 - **Vite + React + TypeScript** (static SPA)
 - **Tailwind CSS** — "Capture Deck" design system
-- **react-router-dom** — `/` catalog, `/match` questionnaire, `/report` dossier, `/lobby` toolkit (sign-in required)
-- **Supabase** — auth, notes, lobby campaign cloud sync (required for lobby toolkit in production)
+- **react-router-dom** — `/` catalog, `/match` questionnaire, `/report` dossier, `/lobby` toolkit
+- **Supabase** — auth, notes, lobby campaign cloud sync (required for the full site in production)
 
 ## Supabase setup
 
-The **lobby toolkit** (`/lobby`) requires sign-in. Catalog search and company match work without an account.
+When Supabase env vars are set at build time, **the entire site** requires sign-in (catalog, match, dossier, and lobby toolkit). Without them, the app runs without auth for local development.
 
 ### 1. Supabase project
 
@@ -73,7 +73,7 @@ Add these **repository secrets** (Settings → Secrets and variables → Actions
 
 The deploy workflow passes them into `npm run build` so Sign in appears on the live site. The anon key is embedded in the static bundle by design; row-level security in `schema.sql` protects user data.
 
-Without these secrets, the lobby toolkit shows an authentication-unavailable message and Sign in is hidden.
+Without these secrets, Sign in is hidden and the app runs without auth (local-dev fallback).
 
 A vanilla HTML starter matching the auth + notes pattern lives in `supabase-starter/`.
 

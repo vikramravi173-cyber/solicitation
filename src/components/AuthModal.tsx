@@ -52,7 +52,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         <div className="border-b border-line px-5 py-4">
           <div className="eyebrow">Account</div>
           <h2 id="auth-title" className="mt-1 font-display text-xl font-bold text-mist">
-            {user ? "Signed in" : "Sign in"}
+            {user ? "Signed in" : "Sign in to Capture Deck"}
           </h2>
         </div>
 
@@ -70,7 +70,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
                 Welcome, <span className="text-brass">{user.email}</span>
               </p>
               <p className="text-[13px] text-muted">
-                Your lobby campaign syncs to the cloud. Capture notes on the Account page.
+                Your notes and lobby campaign sync to the cloud. Manage notes on the Account page.
               </p>
               <button type="button" onClick={handleSignOut} className="btn-ghost w-full py-2.5">
                 Sign out

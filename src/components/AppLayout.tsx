@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { CATALOG_META } from "@/data/solicitations";
 import { AuthModal } from "@/components/AuthModal";
+import { RequireAuth } from "@/components/RequireAuth";
 import { useAuth } from "@/lib/supabase/AuthContext";
 
 function Wordmark() {
@@ -56,7 +57,9 @@ export function AppLayout() {
       </header>
 
       <main className="flex-1">
-        <Outlet />
+        <RequireAuth purpose="site">
+          <Outlet />
+        </RequireAuth>
       </main>
 
       <footer className="no-print border-t border-line">

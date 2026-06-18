@@ -21,7 +21,7 @@ export function LobbyProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load campaign from cloud on mount (RequireAuth guarantees user is signed in)
+  // Load campaign from cloud on mount (site-wide auth guarantees user when Supabase is configured)
   useEffect(() => {
     if (!user) return;
 
