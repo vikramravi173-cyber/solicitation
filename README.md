@@ -64,18 +64,11 @@ if needed.
 
 ### 4. GitHub Pages (production)
 
-The live site is **`https://vikramravi173-cyber.github.io/solicitation/`**, deployed from the **`vikramravi173-cyber/solicitation`** repo (not a fork with a different name). Push to that repo and add secrets **there**.
+The live site is **`https://vikramravi173-cyber.github.io/solicitation/`**, deployed from **`vikramravi173-cyber/solicitation`**.
 
-Add these **repository secrets** (Settings → Secrets and variables → Actions on **`solicitation`**):
+Production Supabase URL + anon key are in [`.env.production`](.env.production) (the anon key is a public client key; RLS in `schema.sql` protects user data). Local overrides stay in `.env.local`.
 
-| Secret | Value |
-|--------|--------|
-| `VITE_SUPABASE_URL` | Project URL from Supabase → Settings → API |
-| `VITE_SUPABASE_ANON_KEY` | `anon` `public` key from the same page |
-
-The deploy workflow passes them into `npm run build` so Sign in appears on the live site. The anon key is embedded in the static bundle by design; row-level security in `schema.sql` protects user data.
-
-Without these secrets, Sign in is hidden and the app runs without auth (local-dev fallback).
+Optional: you can still set `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` as GitHub Actions secrets to override `.env.production` without committing changes — but **do not** pass empty secrets in the workflow, or they will override the file with blank values.
 
 A vanilla HTML starter matching the auth + notes pattern lives in `supabase-starter/`.
 

@@ -34,21 +34,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Verify Supabase secrets
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-        run: |
-          if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_ANON_KEY" ]; then
-            echo "::error::Missing GitHub Actions secrets. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY under Settings → Secrets and variables → Actions (in this repo: vikramravi173-cyber/solicitation)."
-            exit 1
-          fi
-
       - name: Build
         env:
           VITE_BASE_PATH: /solicitation/
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: npm run build
 
       - name: Add SPA fallback and disable Jekyll
