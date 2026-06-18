@@ -2,12 +2,12 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath, URL } from "node:url";
 
-// GitHub Pages serves project sites under /<repo>/. The base is applied only
-// for production builds so local dev stays at "/".
-const REPO_BASE = "/solicitation/";
+// GitHub Pages project sites live under /<repo>/; CI sets VITE_BASE_PATH for that.
+// Local `npm run build && npm run preview` defaults to "/" so assets resolve.
+const BUILD_BASE = process.env.VITE_BASE_PATH || "/";
 
 export default defineConfig(({ command }) => ({
-  base: command === "build" ? REPO_BASE : "/",
+  base: command === "build" ? BUILD_BASE : "/",
   plugins: [react()],
   resolve: {
     alias: {

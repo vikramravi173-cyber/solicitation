@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:pages": "VITE_BASE_PATH=/solicitation/ vite build",
     "preview": "vite preview",
     "parse-pdf": "node scripts/parse-pdf.cjs",
     "import-grants": "node scripts/import-grants-csv.cjs",

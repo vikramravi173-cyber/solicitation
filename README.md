@@ -62,6 +62,10 @@ After changing `data/solicitations.json`, restart dev or rebuild:
 
 ```bash
 npm run build
+npm run preview    # http://localhost:4173/
+
+# Parity check with the GitHub Pages base path:
+npm run build:pages
 npm run preview    # http://localhost:4173/solicitation/
 ```
 

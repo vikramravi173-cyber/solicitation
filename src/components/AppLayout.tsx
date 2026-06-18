@@ -29,12 +29,12 @@ export function AppLayout() {
         <div className="mx-auto flex h-14 max-w-deck items-center justify-between px-5">
           <Wordmark />
           <nav className="flex items-center gap-1">
-            <a
-              href="/#book-with-bret"
+            <Link
+              to="/#book-with-bret"
               className="font-mono text-[12px] px-3 py-2 text-brass transition-colors hover:text-brass-bright"
             >
               Schedule a Meeting
-            </a>
+            </Link>
             <HeaderLink to="/lobby" label="Lobby toolkit" />
             <HeaderLink to="/match" label="Company match" />
             {onReport && <HeaderLink to="/report" label="Dossier" />}
