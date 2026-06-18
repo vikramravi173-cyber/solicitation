@@ -2,7 +2,7 @@ import type { LobbyCampaign } from "./types";
 
 const STORAGE_KEY = "capture-deck-lobby-campaign";
 
-function emptyCampaign(): LobbyCampaign {
+export function emptyCampaign(): LobbyCampaign {
   const now = new Date().toISOString();
   return {
     id: crypto.randomUUID(),
@@ -26,6 +26,10 @@ function emptyCampaign(): LobbyCampaign {
     senateMembers: [],
     updatedAt: now,
   };
+}
+
+export function clearLobbyStorage(): void {
+  localStorage.removeItem(STORAGE_KEY);
 }
 
 export function loadCampaign(): LobbyCampaign {

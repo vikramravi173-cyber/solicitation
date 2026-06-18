@@ -78,8 +78,12 @@ export function AccountPage() {
         <div className="eyebrow">Account</div>
         <h1 className="mt-3 font-display text-3xl font-bold text-mist">Sign in required</h1>
         <p className="mt-3 text-[15px] text-muted">
-          Use the <strong className="text-mist">Sign in</strong> button in the header to access
-          notes and cloud-synced lobby campaigns.
+          Notes and your lobby campaign sync when signed in. The lobby toolkit requires an
+          account — use <strong className="text-mist">Sign in</strong> in the header or visit{" "}
+          <Link to="/lobby" className="text-brass hover:text-brass-bright">
+            /lobby
+          </Link>
+          .
         </p>
         <Link to="/" className="btn-ghost mt-6 inline-flex py-2.5">
           ← Back to home
@@ -96,7 +100,8 @@ export function AccountPage() {
           Welcome, {user.email}
         </h1>
         <p className="mt-3 text-[15px] text-muted">
-          Notes and lobby campaigns sync to your Supabase project when signed in.
+          Notes and your lobby campaign sync to your Supabase project. The lobby toolkit is only
+          available when signed in.
         </p>
       </header>
 

@@ -149,7 +149,7 @@ export function HomePage() {
             <ToolCard
               eyebrow="DIY lobby toolkit"
               title="Congressional authorization tracker"
-              description="Draft NDAA requests, log staff outreach, generate emails, and get interactive lobbying guidance."
+              description="Draft NDAA requests, log staff outreach, and generate emails. Sign in required."
               cta="Open lobby toolkit →"
               href="/lobby"
             />

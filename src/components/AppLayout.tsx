@@ -38,19 +38,19 @@ export function AppLayout() {
             <HeaderLink to="/lobby" label="Lobby toolkit" />
             <HeaderLink to="/match" label="Company match" />
             {onReport && <HeaderLink to="/report" label="Dossier" />}
-            {configured && !loading && (
-              user ? (
+            {configured &&
+              (user ? (
                 <HeaderLink to="/account" label="Account" />
               ) : (
                 <button
                   type="button"
                   onClick={() => setAuthOpen(true)}
-                  className="font-mono text-[12px] px-3 py-2 text-muted transition-colors hover:text-mist"
+                  disabled={loading}
+                  className="font-mono text-[12px] px-3 py-2 text-muted transition-colors hover:text-mist disabled:opacity-50"
                 >
-                  Sign in
+                  {loading ? "…" : "Sign in"}
                 </button>
-              )
-            )}
+              ))}
           </nav>
         </div>
       </header>

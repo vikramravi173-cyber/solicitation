@@ -7,6 +7,7 @@ import {
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { getSupabase, isSupabaseConfigured } from "./client";
+import { clearLobbyStorage } from "@/lib/lobby/storage";
 
 interface AuthContextValue {
   configured: boolean;
@@ -60,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function signOut(): Promise<void> {
     const supabase = getSupabase();
     if (!supabase) return;
+    clearLobbyStorage();
     await supabase.auth.signOut();
   }
 

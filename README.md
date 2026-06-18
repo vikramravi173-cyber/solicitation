@@ -12,17 +12,42 @@ entirely in the browser — **no API keys, no backend.**
 
 - **Vite + React + TypeScript** (static SPA)
 - **Tailwind CSS** — "Capture Deck" design system
-- **react-router-dom** — `/` catalog, `/match` questionnaire, `/report` dossier
-- **Supabase** (optional) — auth, notes, lobby campaign cloud sync
+- **react-router-dom** — `/` catalog, `/match` questionnaire, `/report` dossier, `/lobby` toolkit (sign-in required)
+- **Supabase** — auth, notes, lobby campaign cloud sync (required for lobby toolkit in production)
 
-## Supabase setup (optional)
+## Supabase setup
+
+The **lobby toolkit** (`/lobby`) requires sign-in. Catalog search and company match work without an account.
+
+### 1. Supabase project
 
 1. Create a project at [supabase.com](https://supabase.com)
-2. Run `supabase/schema.sql` in the SQL Editor
-3. Copy `.env.example` → `.env.local` and set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
-4. `npm install` then `npm run dev`
+2. Run [`supabase/schema.sql`](supabase/schema.sql) in the SQL Editor
+3. Under **Authentication → URL configuration**, set:
+   - **Site URL:** `https://vikramravi173-cyber.github.io/solicitation/`
+   - **Redirect URLs:** `https://vikramravi173-cyber.github.io/solicitation/` and `http://localhost:5173`
 
-Without Supabase, the app runs fully offline with localStorage (same as before).
+### 2. Local development
+
+```bash
+cp .env.example .env.local
+# Edit .env.local with your VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+npm install
+npm run dev
+```
+
+### 3. GitHub Pages (production)
+
+Add these **repository secrets** (Settings → Secrets and variables → Actions):
+
+| Secret | Value |
+|--------|--------|
+| `VITE_SUPABASE_URL` | Project URL from Supabase → Settings → API |
+| `VITE_SUPABASE_ANON_KEY` | `anon` `public` key from the same page |
+
+The deploy workflow passes them into `npm run build` so Sign in appears on the live site. The anon key is embedded in the static bundle by design; row-level security in `schema.sql` protects user data.
+
+Without these secrets, the lobby toolkit shows an authentication-unavailable message and Sign in is hidden.
 
 A vanilla HTML starter matching the auth + notes pattern lives in `supabase-starter/`.
 

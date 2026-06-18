@@ -70,7 +70,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
                 Welcome, <span className="text-brass">{user.email}</span>
               </p>
               <p className="text-[13px] text-muted">
-                Lobby campaigns sync to your account. Capture notes on the Account page.
+                Your lobby campaign syncs to the cloud. Capture notes on the Account page.
               </p>
               <button type="button" onClick={handleSignOut} className="btn-ghost w-full py-2.5">
                 Sign out

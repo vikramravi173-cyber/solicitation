@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { RequireAuth } from "@/components/RequireAuth";
 import { LobbyProvider, useLobby } from "@/lib/lobby/context";
 import { exportCampaignJson } from "@/lib/lobby/storage";
 import type { LobbyTab } from "@/lib/lobby/types";
@@ -42,9 +43,11 @@ const VALID_TABS = new Set<string>(TABS.map((t) => t.id));
 
 export function LobbyPage() {
   return (
-    <LobbyProvider>
-      <LobbyPageInner />
-    </LobbyProvider>
+    <RequireAuth purpose="lobby">
+      <LobbyProvider>
+        <LobbyPageInner />
+      </LobbyProvider>
+    </RequireAuth>
   );
 }
 
@@ -96,21 +99,20 @@ function LobbyPageInner() {
             </h1>
             <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-mist/80">
               Draft NDAA requests, log staff outreach, generate emails, and work through the DIY
-              Lobbyist workflow — aligned with the Strogen authorization template. All data stays in
-              your browser.
+              Lobbyist workflow — aligned with the Strogen authorization template. Sign in to save
+              your campaign to the cloud.
             </p>
 
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <button type="button" onClick={exportJson} className="btn-ghost py-2.5">
                 {exported ? "Exported!" : "Export campaign JSON"}
               </button>
-              {cloudSync !== "local" && (
-                <span className="font-mono text-[11px] text-faint">
-                  {cloudSync === "syncing" && "Syncing…"}
-                  {cloudSync === "synced" && "Cloud synced"}
-                  {cloudSync === "error" && "Sync error — saved locally"}
-                </span>
-              )}
+              <span className="font-mono text-[11px] text-faint">
+                {cloudSync === "syncing" && "Syncing…"}
+                {cloudSync === "synced" && "Cloud synced"}
+                {cloudSync === "error" && "Sync error — retry by editing a field"}
+                {cloudSync === "loading" && "Loading…"}
+              </span>
               <Link to="/match" className="btn-quiet py-2.5">
                 ← Back to company match
               </Link>
