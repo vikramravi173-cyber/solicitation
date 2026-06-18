@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "parse-pdf": "node scripts/parse-pdf.cjs"
+    "parse-pdf": "node scripts/parse-pdf.cjs",
+    "import-grants": "node scripts/import-grants-csv.cjs",
+    "import-sbir-topics": "node scripts/import-sbir-topics-csv.cjs"
   },
   "dependencies": {
     "react": "^18.3.1",

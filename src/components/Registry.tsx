@@ -16,7 +16,7 @@ interface RegistryProps {
   selectedIndex?: number;
 }
 
-const DEPARTMENTS = ["Navy", "NASA", "Air Force", "Army", "OSD", "SOCOM", "Space Force"];
+const DEPARTMENTS = ["Navy", "NASA", "Air Force", "Army", "OSD", "SOCOM", "Space Force", "DOE"];
 
 function dueValue(due: string): number {
   if (!meaningful(due)) return Number.POSITIVE_INFINITY;

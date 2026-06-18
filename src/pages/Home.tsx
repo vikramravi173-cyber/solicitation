@@ -60,7 +60,7 @@ export function HomePage() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && focusRegistry()}
-                  placeholder="Search 290 solicitations…"
+                  placeholder={`Search ${CATALOG_META.count} solicitations…`}
                   className="field pl-10 py-3 text-[15px]"
                   aria-label="Search the catalog"
                 />
