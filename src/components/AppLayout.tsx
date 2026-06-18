@@ -1,5 +1,8 @@
+import { useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { CATALOG_META } from "@/data/solicitations";
+import { AuthModal } from "@/components/AuthModal";
+import { useAuth } from "@/lib/supabase/AuthContext";
 
 function Wordmark() {
   return (
@@ -17,6 +20,8 @@ function Wordmark() {
 export function AppLayout() {
   const { pathname } = useLocation();
   const onReport = pathname === "/report";
+  const { configured, user, loading } = useAuth();
+  const [authOpen, setAuthOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -30,8 +35,22 @@ export function AppLayout() {
             >
               Schedule a Meeting
             </a>
+            <HeaderLink to="/lobby" label="Lobby toolkit" />
             <HeaderLink to="/match" label="Company match" />
             {onReport && <HeaderLink to="/report" label="Dossier" />}
+            {configured && !loading && (
+              user ? (
+                <HeaderLink to="/account" label="Account" />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setAuthOpen(true)}
+                  className="font-mono text-[12px] px-3 py-2 text-muted transition-colors hover:text-mist"
+                >
+                  Sign in
+                </button>
+              )
+            )}
           </nav>
         </div>
       </header>
@@ -43,13 +62,15 @@ export function AppLayout() {
       <footer className="no-print border-t border-line">
         <div className="mx-auto flex max-w-deck flex-col items-start justify-between gap-2 px-5 py-5 text-[12px] text-faint sm:flex-row sm:items-center">
           <span className="font-mono">
-            {CATALOG_META.count} solicitations · Gov Events &amp; Opportunities catalog
+            {CATALOG_META.count} solicitations · Capture Deck · Catalog &amp; lobby toolkit
           </span>
           <span className="font-mono">
             Catalog parsed {new Date(CATALOG_META.parsedAt).toLocaleDateString()}
           </span>
         </div>
       </footer>
+
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </div>
   );
 }

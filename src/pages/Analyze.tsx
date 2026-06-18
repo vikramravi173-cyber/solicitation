@@ -34,8 +34,8 @@ export function AnalyzePage() {
           Tell us what you build.
         </h1>
         <p className="mt-3 text-[15px] leading-relaxed text-muted">
-          Answer the required questions to score your company against the full catalog.
-          About five minutes; nothing leaves your browser.
+          Answer the required fields across four sections to score your company against the full
+          catalog. About five minutes; nothing leaves your browser.
         </p>
       </header>
 

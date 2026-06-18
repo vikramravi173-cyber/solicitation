@@ -51,7 +51,7 @@ function similarityRatio(a: string, b: string): number {
   return 1 - levenshtein(a, b) / maxLen;
 }
 
-function tokenFuzzyMatch(queryToken: string, corpusToken: string): number {
+function tokenSimilarity(queryToken: string, corpusToken: string): number {
   if (queryToken === corpusToken) return 1;
 
   const shorter = queryToken.length <= corpusToken.length ? queryToken : corpusToken;
@@ -74,8 +74,8 @@ function tokenFuzzyMatch(queryToken: string, corpusToken: string): number {
   return 0;
 }
 
-/** Fuzzy relevance between a search query and a text corpus (0–1). */
-export function fuzzyScore(query: string, corpus: string): number {
+/** Text relevance between a search query and a corpus (0–1). */
+export function textMatchScore(query: string, corpus: string): number {
   const queryTokens = tokenize(query);
   if (queryTokens.length === 0) return 0;
 
@@ -92,7 +92,7 @@ export function fuzzyScore(query: string, corpus: string): number {
     let best = 0;
     if (corpusLower.includes(qt)) best = 0.92;
     for (const ct of corpusTokens) {
-      best = Math.max(best, tokenFuzzyMatch(qt, ct));
+      best = Math.max(best, tokenSimilarity(qt, ct));
     }
     totalMatch += best;
   }

@@ -1,15 +1,20 @@
 import { CATALOG_META } from "@/data/solicitations";
 
 export interface CompanyProfile {
-  technologyAndCapabilities: string;
+  companyName: string;
+  technologyAreas: string;
+  capabilities: string;
+  productsAndServices: string;
   technologyReadinessLevel: string;
   federalExperienceLevel: string;
   federalExperienceDetails: string;
+  sbirSttrHistory: string;
   governmentFundingSources: string;
   privateFundingSources: string;
   fundingDetails: string;
   teamSize: string;
   targetDepartments: string;
+  businessStatus: string;
   differentiators: string;
   additionalContext: string;
 }
@@ -76,14 +81,49 @@ export function toggleMultiValue(current: string, option: string, noneOption?: s
 
 export const COMPANY_QUESTIONS: QuestionDefinition[] = [
   {
-    id: "technologyAndCapabilities",
-    label: "What technologies and services does your company offer?",
+    id: "companyName",
+    label: "Company name",
     whyWeAsk:
-      `This is the primary signal we use to match you against ${CATALOG_META.count}+ solicitations. Vague answers like “innovative solutions” produce weak matches; specific technical language produces strong ones.`,
+      "Your dossier and pursuit briefs are personalized to your organization. This also aligns with proposal and congressional outreach templates elsewhere on the platform.",
     howToAnswer:
-      "Name your products or services, the technical domains you work in (e.g. batteries, photonics, autonomy), and what maturity level you can deliver today. Think: what would a program manager see on your capability brief?",
+      "Use the legal or trade name that appears on proposals and CAGE registration — not a marketing tagline.",
+    placeholder: "Acme Defense Technologies, Inc.",
+    type: "text",
+    required: true,
+  },
+  {
+    id: "technologyAreas",
+    label: "Primary technology areas",
+    whyWeAsk:
+      `Core R&D domains are the first signal we match against ${CATALOG_META.count}+ solicitations. Broad labels like “AI” or “innovation” produce weak matches; specific domains produce strong ones.`,
+    howToAnswer:
+      "List the technical fields you work in — materials, photonics, autonomy, energy storage, C2, etc. Focus on domains, not company history.",
     placeholder:
-      "Example: We develop solid-state battery packs and thermal management systems for defense platforms — from lab prototypes (TRL 4) through pilot manufacturing. We integrate with existing vehicle power buses and have supported DoD energy resilience studies.",
+      "Advanced materials, solid-state energy storage, thermal management for defense platforms",
+    type: "textarea",
+    required: true,
+  },
+  {
+    id: "capabilities",
+    label: "Technical capabilities",
+    whyWeAsk:
+      "Solicitations differ on what they need delivered — prototyping, testing, manufacturing, integration. We weight opportunities you can actually execute.",
+    howToAnswer:
+      "Describe what you can deliver today: lab prototyping, pilot production, systems integration, test & evaluation, field deployment support, etc.",
+    placeholder:
+      "Lab-scale prototyping through pilot manufacturing; MIL-STD environmental testing; vehicle power-bus integration",
+    type: "textarea",
+    required: true,
+  },
+  {
+    id: "productsAndServices",
+    label: "Products and services",
+    whyWeAsk:
+      "Named offerings help us match against solicitation titles and keyword fields where program managers describe what they are buying.",
+    howToAnswer:
+      "List current products, platforms, or engineering services relevant to federal opportunities — include model names or program types if applicable.",
+    placeholder:
+      "Solid-state battery packs, thermal storage modules, power-system integration services, engineering support under CPFF",
     type: "textarea",
     required: true,
   },
@@ -132,6 +172,18 @@ export const COMPANY_QUESTIONS: QuestionDefinition[] = [
       "List agency names, contract or grant types, award years, and one-line outcomes. Even a single SBIR Phase I or subcontract is valuable here.",
     placeholder:
       "Example: USAF SBIR Phase I (2023) on deployable power; subcontractor to Lockheed on Army xTech demo; NASA STTR with university partner on thermal coatings.",
+    type: "textarea",
+    required: false,
+  },
+  {
+    id: "sbirSttrHistory",
+    label: "SBIR / STTR history (optional)",
+    whyWeAsk:
+      "Dedicated SBIR/STTR history improves matching on topic-based solicitations and lets the dossier reference Phase transitions in application guidance.",
+    howToAnswer:
+      "List Phase I/II/III awards, topics pursued, agencies, and any transition or commercialization outcomes. Skip if not applicable.",
+    placeholder:
+      "Two USAF Phase I SBIRs (2021, 2023); one Army Phase II in progress; transitioned one program to AFRL CRADA",
     type: "textarea",
     required: false,
   },
@@ -189,7 +241,7 @@ export const COMPANY_QUESTIONS: QuestionDefinition[] = [
     whyWeAsk:
       "We boost solicitations from agencies you prioritize, so your top picks reflect where you actually want to compete.",
     howToAnswer:
-      "Pick your primary target. If you pursue multiple DoD components equally, choose “Multiple DoD components” and name specifics in the last optional question.",
+      "Pick your primary target. If you pursue multiple DoD components equally, choose “Multiple DoD components” and name specifics in the optional context question.",
     placeholder: "",
     type: "select",
     options: [
@@ -204,6 +256,18 @@ export const COMPANY_QUESTIONS: QuestionDefinition[] = [
       "Other agency",
     ],
     required: true,
+  },
+  {
+    id: "businessStatus",
+    label: "Business status (optional)",
+    whyWeAsk:
+      "Small business designations, CAGE registration, and facility clearances affect eligibility — many solicitations are set-aside or require cleared facilities.",
+    howToAnswer:
+      "Note US small business status, socioeconomic categories (8(a), WOSB, HUBZone), CAGE code readiness, facility clearances, and HQ location if relevant.",
+    placeholder:
+      "US small business, CAGE registered, ITAR-compliant facility, Colorado HQ; no facility clearance yet",
+    type: "textarea",
+    required: false,
   },
   {
     id: "differentiators",
@@ -221,39 +285,54 @@ export const COMPANY_QUESTIONS: QuestionDefinition[] = [
     id: "additionalContext",
     label: "Anything else we should know? (optional)",
     whyWeAsk:
-      "Eligibility rules, clearances, and teaming preferences can change which solicitations are viable — this catches constraints the other questions miss.",
+      "Teaming preferences, geographic limits, and strategic goals can change which solicitations are viable — this catches constraints the other questions miss.",
     howToAnswer:
-      "Note small business status, facility clearances, geographic limits, openness to teaming, or anything that would affect whether you can bid as prime.",
+      "Note openness to teaming, OCONUS limitations, university partnership interest, or pursuit of a first BAA win. Skip if nothing useful to add.",
     placeholder:
-      "Example: US small business, CAGE registered, prefer unclassified work, open to university partnerships, cannot support on-site OCONUS deployments.",
+      "Example: Seeking first BAA win; open to university STTR partnerships; prefer unclassified work; cannot support on-site OCONUS deployments.",
     type: "textarea",
     required: false,
   },
 ];
 
 export const EMPTY_COMPANY_PROFILE: CompanyProfile = {
-  technologyAndCapabilities: "",
+  companyName: "",
+  technologyAreas: "",
+  capabilities: "",
+  productsAndServices: "",
   technologyReadinessLevel: "",
   federalExperienceLevel: "",
   federalExperienceDetails: "",
+  sbirSttrHistory: "",
   governmentFundingSources: "",
   privateFundingSources: "",
   fundingDetails: "",
   teamSize: "",
   targetDepartments: "",
+  businessStatus: "",
   differentiators: "",
   additionalContext: "",
 };
 
+/** Combined capability text for matching and scoring. */
+export function companyCapabilityText(company: CompanyProfile): string {
+  return [company.technologyAreas, company.capabilities, company.productsAndServices]
+    .filter(Boolean)
+    .join(" ");
+}
+
 /** Flat text used for keyword matching across the profile. */
 export function companyProfileText(company: CompanyProfile): string {
   return [
-    company.technologyAndCapabilities,
+    company.companyName,
+    companyCapabilityText(company),
     company.federalExperienceLevel,
     company.federalExperienceDetails,
+    company.sbirSttrHistory,
     company.governmentFundingSources.replaceAll(MULTI_VALUE_SEP, " "),
     company.privateFundingSources.replaceAll(MULTI_VALUE_SEP, " "),
     company.fundingDetails,
+    company.businessStatus,
     company.differentiators,
     company.additionalContext,
   ].join(" ");
@@ -261,9 +340,19 @@ export function companyProfileText(company: CompanyProfile): string {
 
 /** Experience string for SBIR/BAA type scoring. */
 export function federalExperienceText(company: CompanyProfile): string {
-  return `${company.federalExperienceLevel} ${company.federalExperienceDetails} ${company.governmentFundingSources}`.toLowerCase();
+  return `${company.federalExperienceLevel} ${company.federalExperienceDetails} ${company.sbirSttrHistory} ${company.governmentFundingSources}`.toLowerCase();
 }
 
 export function privateFundingText(company: CompanyProfile): string {
   return `${company.privateFundingSources} ${company.fundingDetails}`.toLowerCase();
+}
+
+export function companyDisplayLabel(company: CompanyProfile): string {
+  const name = company.companyName.trim();
+  if (name) return name;
+  const fromCapabilities = company.productsAndServices.trim().split(/[.,\n]/)[0]?.trim();
+  if (fromCapabilities && fromCapabilities.length >= 3 && fromCapabilities.length <= 48) {
+    return fromCapabilities;
+  }
+  return "Your company";
 }

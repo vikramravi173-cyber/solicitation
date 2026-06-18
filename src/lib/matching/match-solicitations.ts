@@ -4,7 +4,7 @@ import type { MatchedSolicitation } from "@/lib/domain/types";
 import type { SolicitationRow } from "@/lib/solicitations/types";
 import { resolveDisplayTitle } from "@/lib/solicitations/display-title";
 import { departmentMatchesTarget } from "./department-match";
-import { fuzzyScore, overlapScore, tokenize } from "./text-utils";
+import { textMatchScore, overlapScore, tokenize } from "./text-utils";
 
 const TOP_MATCH_COUNT = 5;
 
@@ -130,7 +130,7 @@ export function profileKeywords(company: CompanyProfile): string[] {
   return Array.from(new Set(tokenize(companyCorpus(company)))).slice(0, 20);
 }
 
-export interface FuzzySearchResult {
+export interface CatalogSearchResult {
   rowIndex: number;
   displayTitle: string;
   department: string;
@@ -140,21 +140,21 @@ export interface FuzzySearchResult {
   score: number;
 }
 
-/** @deprecated Use FuzzySearchResult */
-export type KeywordSearchResult = FuzzySearchResult;
+/** @deprecated Use CatalogSearchResult */
+export type KeywordSearchResult = CatalogSearchResult;
 
-export function searchSolicitationsByFuzzy(
+export function searchSolicitations(
   query: string,
   solicitations: SolicitationRow[],
   limit = 10,
-): FuzzySearchResult[] {
+): CatalogSearchResult[] {
   const trimmed = query.trim();
   if (!trimmed) return [];
 
   return solicitations
     .map((solicitation) => ({
       solicitation,
-      score: Math.round(fuzzyScore(trimmed, solicitationCorpus(solicitation)) * 100),
+      score: Math.round(textMatchScore(trimmed, solicitationCorpus(solicitation)) * 100),
     }))
     .filter((r) => r.score >= 15)
     .sort((a, b) => b.score - a.score)
@@ -170,5 +170,5 @@ export function searchSolicitationsByFuzzy(
     }));
 }
 
-/** @deprecated Use searchSolicitationsByFuzzy */
-export const searchSolicitationsByKeywords = searchSolicitationsByFuzzy;
+/** @deprecated Use searchSolicitations */
+export const searchSolicitationsByKeywords = searchSolicitations;

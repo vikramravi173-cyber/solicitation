@@ -8,7 +8,8 @@ export function companyProfileFromKeywords(query: string): CompanyProfile {
   const trimmed = query.trim();
   return {
     ...EMPTY_COMPANY_PROFILE,
-    technologyAndCapabilities: trimmed,
+    technologyAreas: trimmed,
+    productsAndServices: trimmed,
     technologyReadinessLevel: "Mixed across programs",
     federalExperienceLevel: "None yet — seeking first award",
     governmentFundingSources: "None — no government funding yet",

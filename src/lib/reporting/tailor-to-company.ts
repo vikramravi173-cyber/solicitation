@@ -1,10 +1,11 @@
 import type { CompanyProfile } from "@/lib/company/questionnaire";
-import { federalExperienceText, parseMultiValue } from "@/lib/company/questionnaire";
+import { companyCapabilityText, federalExperienceText, parseMultiValue } from "@/lib/company/questionnaire";
 import type { AcceptanceAssessment, MatchedSolicitation } from "@/lib/domain/types";
 import { departmentMatchesTarget } from "@/lib/matching/department-match";
 import { overlapScore } from "@/lib/matching/text-utils";
 import type { SolicitationProfile } from "./build-solicitation-profile";
 import { synthesizeNarrative, synthesizeSentences, synthesizeTalkingPoints } from "./synthesize-text";
+import { filterApplicationActions } from "./format-sources";
 
 export interface TailoredOpportunityReport {
   whyApply: string;
@@ -28,7 +29,8 @@ function matchingKeywords(company: CompanyProfile, profile: SolicitationProfile)
     profile.organization,
   ].join(" ");
 
-  const companyTokens = company.technologyAndCapabilities
+  const capabilityText = companyCapabilityText(company);
+  const companyTokens = capabilityText
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, " ")
     .split(/\s+/)
@@ -59,12 +61,26 @@ function pursuitLevel(
   return "Low priority";
 }
 
+function formatCapabilitySnippet(capabilityText: string, profile: SolicitationProfile): string {
+  const trimmed = capabilityText.trim();
+  if (!trimmed) return profile.keyWords || profile.displayTitle;
+
+  // Single catalog-style token (e.g. natural_resources) — use human context instead
+  if (/^[\w-]+$/.test(trimmed) && trimmed.length < 40) {
+    if (profile.keyWords && profile.keyWords !== trimmed) return profile.keyWords;
+    return profile.displayTitle.slice(0, 120);
+  }
+
+  return trimmed.length > 150 ? `${trimmed.slice(0, 150)}…` : trimmed;
+}
+
 export function tailorProfileToCompany(
   company: CompanyProfile,
   profile: SolicitationProfile,
   match: MatchedSolicitation,
   acceptance: AcceptanceAssessment,
 ): TailoredOpportunityReport {
+  const capabilityText = companyCapabilityText(company);
   const matchRationale =
     match?.matchRationale?.trim() ||
     "your capabilities and target agencies show alignment with this solicitation";
@@ -72,7 +88,7 @@ export function tailorProfileToCompany(
   const matchScore = match?.matchScore ?? 0;
   const keywords = matchingKeywords(company, profile);
   const fitScore = overlapScore(
-    company.technologyAndCapabilities,
+    capabilityText,
     [profile.displayTitle, profile.keyWords, profile.summary].join(" "),
   );
 
@@ -108,8 +124,10 @@ export function tailorProfileToCompany(
 
   const applicationTalkingPoints: string[] = [];
 
+  const capabilitySnippet = formatCapabilitySnippet(capabilityText, profile);
+
   applicationTalkingPoints.push(
-    `Open with how your core technology (${company.technologyAndCapabilities.slice(0, 150)}…) directly addresses the solicitation's technical scope.`,
+    `Open with how your capabilities (${capabilitySnippet}) address the solicitation's technical scope and stated focus areas.`,
   );
 
   if (company.differentiators.trim()) {
@@ -126,6 +144,10 @@ export function tailorProfileToCompany(
     );
   }
 
+  if (company.sbirSttrHistory.trim()) {
+    applicationTalkingPoints.push(`Cite SBIR/STTR history: ${company.sbirSttrHistory.slice(0, 120)}`);
+  }
+
   const govFunding = parseMultiValue(company.governmentFundingSources);
   if (govFunding.length > 0 && !govFunding[0]?.startsWith("None")) {
     applicationTalkingPoints.push(
@@ -139,13 +161,29 @@ export function tailorProfileToCompany(
     );
   }
 
+  if (profile.funding && !profile.funding.toLowerCase().includes("not listed in the catalog")) {
+    applicationTalkingPoints.push(`Align your budget narrative with published funding: ${profile.funding.slice(0, 160)}`);
+  }
+
+  if (profile.requirements && profile.requirements.length > 40) {
+    applicationTalkingPoints.push(
+      `Address submission requirements explicitly: ${profile.requirements.slice(0, 180)}`,
+    );
+  }
+
   applicationTalkingPoints.push(
-    ...acceptance.recommendedActions.slice(0, 3),
+    ...filterApplicationActions(acceptance.recommendedActions).slice(0, 3),
   );
 
   const applicationGuidance = synthesizeTalkingPoints(applicationTalkingPoints);
 
   let teamingAndEligibility = profile.whoCanSubmit;
+  if (company.businessStatus.trim()) {
+    teamingAndEligibility = synthesizeSentences([
+      teamingAndEligibility,
+      `Your stated business status (${company.businessStatus.slice(0, 120)}) should be cross-checked against eligibility and set-aside requirements.`,
+    ]);
+  }
   if (profile.applicants.toLowerCase().includes("govt") || profile.applicants.toLowerCase().includes("govt only")) {
     teamingAndEligibility = synthesizeSentences([
       teamingAndEligibility,

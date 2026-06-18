@@ -8,12 +8,22 @@ import {
   type QuestionDefinition,
 } from "@/lib/company/questionnaire";
 
-/** Three honest groups. `fundingDetails` is dropped — it duplicated the final note. */
 const SECTIONS: { title: string; hint: string; ids: (keyof CompanyProfile)[] }[] = [
   {
+    title: "Company identity",
+    hint: "Who you are on proposals and in outreach.",
+    ids: ["companyName"],
+  },
+  {
     title: "Capabilities",
-    hint: "What you build and how competitive you are.",
-    ids: ["technologyAndCapabilities", "technologyReadinessLevel", "differentiators"],
+    hint: "What you build, what you can deliver, and how competitive you are.",
+    ids: [
+      "technologyAreas",
+      "capabilities",
+      "productsAndServices",
+      "technologyReadinessLevel",
+      "differentiators",
+    ],
   },
   {
     title: "Federal track record",
@@ -21,23 +31,20 @@ const SECTIONS: { title: string; hint: string; ids: (keyof CompanyProfile)[] }[]
     ids: [
       "federalExperienceLevel",
       "federalExperienceDetails",
+      "sbirSttrHistory",
       "governmentFundingSources",
       "privateFundingSources",
+      "fundingDetails",
     ],
   },
   {
     title: "Targets & context",
-    hint: "Where you want to compete, and anything else that affects eligibility.",
-    ids: ["teamSize", "targetDepartments", "additionalContext"],
+    hint: "Where you want to compete, eligibility, and anything else that affects fit.",
+    ids: ["teamSize", "targetDepartments", "businessStatus", "additionalContext"],
   },
 ];
 
 const Q_BY_ID = new Map(COMPANY_QUESTIONS.map((q) => [q.id, q]));
-
-/** First sentence of the guidance only — the rest was filler. */
-function helper(q: QuestionDefinition): string {
-  return q.howToAnswer.split(/(?<=[.!?])\s/)[0] ?? "";
-}
 
 export function QuestionnaireForm({
   onSubmit,
@@ -48,6 +55,9 @@ export function QuestionnaireForm({
 }) {
   const [profile, setProfile] = useState<CompanyProfile>(EMPTY_COMPANY_PROFILE);
   const [touched, setTouched] = useState(false);
+  const [expandedWhy, setExpandedWhy] = useState<Partial<Record<keyof CompanyProfile, boolean>>>(
+    {},
+  );
 
   const requiredIds = useMemo(
     () => COMPANY_QUESTIONS.filter((q) => q.required).map((q) => q.id),
@@ -58,6 +68,10 @@ export function QuestionnaireForm({
 
   function set(id: keyof CompanyProfile, value: string) {
     setProfile((p) => ({ ...p, [id]: value }));
+  }
+
+  function toggleWhy(id: keyof CompanyProfile) {
+    setExpandedWhy((prev) => ({ ...prev, [id]: !prev[id] }));
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -81,9 +95,7 @@ export function QuestionnaireForm({
               <span className="font-mono text-[13px] font-semibold tabular text-brass-dim">
                 {String(si + 1).padStart(2, "0")}
               </span>
-              <span className="font-display text-xl font-bold text-mist">
-                {section.title}
-              </span>
+              <span className="font-display text-xl font-bold text-mist">{section.title}</span>
             </legend>
             <p className="mb-6 ml-9 text-[13px] text-faint">{section.hint}</p>
 
@@ -91,22 +103,26 @@ export function QuestionnaireForm({
               {section.ids.map((id) => {
                 const q = Q_BY_ID.get(id)!;
                 const showError = touched && q.required && !profile[id].trim();
+                const whyOpen = expandedWhy[id];
                 return (
                   <div key={id} id={`q-${id}`} className="ml-9 scroll-mt-24">
-                    <label
-                      htmlFor={id}
-                      className="flex items-baseline justify-between gap-3"
-                    >
-                      <span className="text-[15px] font-medium text-mist">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <label htmlFor={id} className="text-[15px] font-medium text-mist">
                         {q.label}
                         {q.required && <span className="text-brass"> *</span>}
-                      </span>
-                    </label>
-                    {helper(q) && (
-                      <p className="mt-1 text-[12.5px] leading-snug text-faint">
-                        {helper(q)}
-                      </p>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => toggleWhy(id)}
+                        className="shrink-0 font-mono text-[11px] text-faint transition-colors hover:text-brass"
+                      >
+                        {whyOpen ? "Hide why" : "Why we ask"}
+                      </button>
+                    </div>
+                    {whyOpen && (
+                      <p className="mt-1.5 text-[12.5px] leading-relaxed text-muted">{q.whyWeAsk}</p>
                     )}
+                    <p className="mt-1 text-[12.5px] leading-snug text-faint">{q.howToAnswer}</p>
                     <div className="mt-2.5">
                       <Field q={q} value={profile[id]} onChange={(v) => set(id, v)} />
                     </div>
@@ -123,7 +139,6 @@ export function QuestionnaireForm({
         ))}
       </div>
 
-      {/* Submit — at the bottom of the form */}
       <div className="mt-12 flex flex-col items-start gap-3 border-t border-line pt-6 sm:flex-row sm:items-center sm:justify-between">
         <p className="font-mono text-[12px] text-faint">
           {completed} / {requiredIds.length} required answered · optional fields sharpen the dossier

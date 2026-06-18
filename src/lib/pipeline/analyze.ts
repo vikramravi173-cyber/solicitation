@@ -6,12 +6,13 @@ import type {
   ScrapedContent,
 } from "@/lib/domain/types";
 import { getSolicitations } from "@/lib/data/solicitations-store";
-import { getOrBuildProfile } from "@/lib/data/solicitation-profiles-store";
+import { fetchSolicitationResearch } from "@/lib/research/fetch-solicitation-research";
+import { buildSolicitationProfile } from "@/lib/reporting/build-solicitation-profile";
 import {
   matchSolicitations,
   solicitationSearchCorpus,
 } from "@/lib/matching/match-solicitations";
-import { fuzzyScore } from "@/lib/matching/text-utils";
+import { textMatchScore } from "@/lib/matching/text-utils";
 import { companyProfileFromKeywords } from "@/lib/company/keyword-profile";
 import { resolveDisplayTitle } from "@/lib/solicitations/display-title";
 import { buildFinalReport } from "@/lib/reporting/build-report";
@@ -33,7 +34,7 @@ function newId(): string {
   return `r-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
 }
 
-/** Catalog-only research stub — the matcher does not perform live scraping. */
+/** @deprecated Catalog-only stub; use fetchSolicitationResearch instead. */
 function emptyResearch(url: string): ScrapedContent {
   return {
     solicitationUrl: url,
@@ -48,8 +49,10 @@ async function buildOpportunity(
   match: MatchedSolicitation,
 ): Promise<AnalyzedOpportunity> {
   const { solicitation } = match;
-  const research = emptyResearch(solicitation.link);
-  const profile = getOrBuildProfile(solicitation);
+  const research = solicitation.link
+    ? await fetchSolicitationResearch(solicitation)
+    : emptyResearch("");
+  const profile = buildSolicitationProfile(solicitation, research);
   const acceptance = await scoreAcceptanceLikelihood(company, solicitation, profile);
   const summary = await summarizeOpportunity(
     company,
@@ -77,7 +80,7 @@ export async function runAnalysis(
     const match = matches[i];
     onProgress?.({
       stage: "scoring",
-      message: `Assessing ${i + 1} of ${matches.length}: ${resolveDisplayTitle(match.solicitation)}`,
+      message: `Researching ${i + 1} of ${matches.length}: ${resolveDisplayTitle(match.solicitation)}`,
     });
     analyzedOpportunities.push(await buildOpportunity(company, match));
   }
@@ -105,11 +108,11 @@ function buildKeywordMatch(
   solicitation: SolicitationRow,
 ): MatchedSolicitation {
   const displayTitle = resolveDisplayTitle(solicitation);
-  const score = Math.round(fuzzyScore(query, solicitationSearchCorpus(solicitation)) * 100);
+  const score = Math.round(textMatchScore(query, solicitationSearchCorpus(solicitation)) * 100);
   return {
     solicitation,
     matchScore: Math.min(100, Math.max(0, score)),
-    matchRationale: `Fuzzy search for "${query}" matched this opportunity's title, focus areas, and catalog metadata (${displayTitle}).`,
+    matchRationale: `Your search for "${query}" matched this opportunity's title, focus areas, and catalog metadata (${displayTitle}).`,
   };
 }
 
@@ -132,12 +135,12 @@ export async function runKeywordOpportunityAnalysis(
   const report = await buildFinalReport(company, [opportunity], solicitations.length);
 
   report.executiveSummary = synthesizeSentences([
-    `Closest catalog match for "${trimmed}" is ${displayTitle} (${solicitation.department}, due ${formatDueDate(solicitation.dueDate)}) at ${match.matchScore}% fuzzy relevance.`,
+    `Closest catalog match for "${trimmed}" is ${displayTitle} (${solicitation.department}, due ${formatDueDate(solicitation.dueDate)}) at ${match.matchScore}% relevance.`,
     `Estimated fit for a generic applicant is ${opportunity.acceptance.likelihoodScore}% (${opportunity.acceptance.likelihoodLabel.toLowerCase()}). Recommendation: ${opportunity.summary.tailored.pursuitRecommendation.toLowerCase()}.`,
     "The brief below covers eligibility, funding, requirements, and tailored guidance for this opportunity.",
   ]);
   report.overallStrategy = synthesizeSentences([
-    `Download the official solicitation and confirm ${displayTitle} fits your capabilities.`,
+    `Review the official solicitation and confirm ${displayTitle} fits your capabilities.`,
     "Build a compliance matrix against the stated requirements and validate your TRL against the expected maturity.",
     "For a ranked list across the full catalog, run the company match.",
   ]);

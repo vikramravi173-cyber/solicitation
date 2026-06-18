@@ -292,10 +292,10 @@ export function buildSolicitationProfile(
   }
 
   const sourcesUsed = [
-    "Gov Events & Opportunities catalog",
     ...(solicitation.link ? [solicitation.link] : []),
     ...(research?.supplementalSources.map((s) => s.url) ?? []),
-  ].filter(Boolean);
+  ];
+  const uniqueSources = [...new Set(sourcesUsed.filter(Boolean))];
 
   const profile: SolicitationProfile = {
     rowIndex: solicitation.rowIndex,
@@ -316,7 +316,7 @@ export function buildSolicitationProfile(
     evaluationCriteria: buildEvaluationSection(solicitation, insights),
     portfolioFlags,
     catalogGaps: identifyCatalogGaps(solicitation),
-    sourcesUsed,
+    sourcesUsed: uniqueSources,
     synthesizedOverview: "",
   };
 

@@ -50,8 +50,8 @@ export function HomePage() {
               you can defend.
             </p>
 
-            {/* Dual entry: filter the catalog, or run a company match */}
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+            {/* Triple entry: search catalog, company match, or lobby toolkit */}
+            <div className="mt-8 flex flex-col gap-3">
               <div className="relative w-full sm:max-w-md">
                 <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 font-mono text-faint">
                   ⌕
@@ -65,9 +65,14 @@ export function HomePage() {
                   aria-label="Search the catalog"
                 />
               </div>
-              <Link to="/match" className="btn-primary py-3">
-                Run company match →
-              </Link>
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <Link to="/match" className="btn-primary py-3">
+                  Run company match →
+                </Link>
+                <Link to="/lobby" className="btn-ghost py-3">
+                  Open lobby toolkit →
+                </Link>
+              </div>
             </div>
 
             {/* Honest stat strip */}
@@ -110,6 +115,48 @@ export function HomePage() {
         />
       </section>
 
+      {/* ── Platform tools (mixed utilizations) ───────────────── */}
+      <section className="border-t border-line bg-panel/40">
+        <div className="mx-auto max-w-deck px-5 py-14">
+          <div className="mb-8 max-w-2xl">
+            <div className="eyebrow-muted">Platform tools</div>
+            <h2 className="mt-2 font-display text-2xl font-bold text-mist">
+              One deck, multiple pursuits
+            </h2>
+            <p className="mt-3 text-[14px] leading-relaxed text-muted">
+              Search federal opportunities, score your company fit, or run a DIY congressional
+              authorization campaign — same command-deck visuals throughout.
+            </p>
+          </div>
+
+          <div className="grid gap-px overflow-hidden md:grid-cols-3">
+            <ToolCard
+              eyebrow="Catalog"
+              title="Live solicitation registry"
+              isPrimary={false}
+              description="Sort, filter, and open any line for a catalog brief across agencies and components."
+              cta="Browse catalog ↓"
+              onClick={focusRegistry}
+            />
+            <ToolCard
+              eyebrow="Company match"
+              title="Structured intake. Five ranked pursuits."
+              description="Describe your technology areas, capabilities, and targets. Get printable pursuit dossiers ranked by fit."
+              cta="Start company match →"
+              href="/match"
+              isPrimary
+            />
+            <ToolCard
+              eyebrow="DIY lobby toolkit"
+              title="Congressional authorization tracker"
+              description="Draft NDAA requests, log staff outreach, generate emails, and get interactive lobbying guidance."
+              cta="Open lobby toolkit →"
+              href="/lobby"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* ── Method + match CTA ───────────────────────────────── */}
       <section className="border-t border-line bg-panel/40">
         <div className="mx-auto grid max-w-deck gap-px overflow-hidden md:grid-cols-2">
@@ -121,8 +168,8 @@ export function HomePage() {
             <ul className="mt-6 space-y-4">
               <Method
                 n="01"
-                head="Fuzzy text match"
-                body="Your query is matched against each solicitation's title, focus areas, and metadata — typos and partial terms included."
+                head="Live catalog search"
+                body="Your query is matched against each solicitation's title, focus areas, and metadata — partial terms and close spellings included."
               />
               <Method
                 n="02"
@@ -149,7 +196,7 @@ export function HomePage() {
             <div className="relative max-w-sm">
               <div className="eyebrow">Company match</div>
               <h3 className="mt-3 font-display text-2xl font-bold leading-tight text-white">
-                Eleven questions. Five ranked pursuits.
+                Structured intake. Five ranked pursuits.
               </h3>
               <p className="mt-4 text-[14px] leading-relaxed text-mist/80">
                 Describe your technology, experience, and targets. Get your top five
@@ -157,6 +204,9 @@ export function HomePage() {
               </p>
               <Link to="/match" className="btn-primary mt-6 py-3">
                 Start company match →
+              </Link>
+              <Link to="/lobby" className="btn-ghost mt-3 py-2.5">
+                Or open lobby toolkit →
               </Link>
             </div>
           </div>
@@ -195,5 +245,51 @@ function Method({ n, head, body }: { n: string; head: string; body: string }) {
         <p className="mt-1 text-[13px] leading-relaxed text-muted">{body}</p>
       </div>
     </li>
+  );
+}
+
+function ToolCard({
+  eyebrow,
+  title,
+  description,
+  cta,
+  href,
+  onClick,
+  isPrimary,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  cta: string;
+  href?: string;
+  onClick?: () => void;
+  isPrimary?: boolean;
+}) {
+  const inner = (
+    <>
+      <div className="eyebrow">{eyebrow}</div>
+      <h3 className="mt-3 font-display text-xl font-bold leading-tight text-mist">{title}</h3>
+      <p className="mt-3 flex-1 text-[13px] leading-relaxed text-muted">{description}</p>
+      <span className={`mt-6 inline-flex ${isPrimary ? "btn-primary" : "btn-ghost"} py-2.5`}>
+        {cta}
+      </span>
+    </>
+  );
+
+  const className =
+    "flex h-full flex-col bg-ink p-8 transition-colors hover:bg-panel sm:p-10";
+
+  if (href) {
+    return (
+      <Link to={href} className={className}>
+        {inner}
+      </Link>
+    );
+  }
+
+  return (
+    <button type="button" onClick={onClick} className={`${className} text-left`}>
+      {inner}
+    </button>
   );
 }

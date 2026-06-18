@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import type { SolicitationRow } from "@/lib/solicitations/types";
 import { resolveDisplayTitle } from "@/lib/solicitations/display-title";
 import { solicitationSearchCorpus } from "@/lib/matching/match-solicitations";
-import { fuzzyScore } from "@/lib/matching/text-utils";
+import { textMatchScore } from "@/lib/matching/text-utils";
 import { field, meaningful } from "@/lib/ui/format";
 
 type SortKey = "department" | "title" | "type" | "due";
@@ -42,7 +42,7 @@ export function Registry({
     let out = rows.filter((r) => {
       if (dept && !r.department.toLowerCase().includes(dept.toLowerCase())) return false;
       if (!q) return true;
-      return fuzzyScore(q, solicitationSearchCorpus(r)) >= 0.15;
+      return textMatchScore(q, solicitationSearchCorpus(r)) >= 0.15;
     });
 
     out = [...out].sort((a, b) => {

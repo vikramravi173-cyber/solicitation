@@ -6,6 +6,7 @@ import { Seal } from "@/components/Seal";
 import { fitTone, recommendationTone } from "@/lib/ui/fit";
 import { field, meaningful } from "@/lib/ui/format";
 import { formatReportTimestamp } from "@/lib/reporting/format-display";
+import { formatReportSources } from "@/lib/reporting/format-sources";
 
 export function ReportPage() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -168,6 +169,14 @@ function OpportunityBrief({ index, opp }: { index: number; opp: AnalyzedOpportun
       {/* Why it fits */}
       <Block label="Why it fits you">{tailored.whyApply}</Block>
 
+      {meaningful(profile.synthesizedOverview) && (
+        <Block label="Opportunity overview">{profile.synthesizedOverview}</Block>
+      )}
+
+      {meaningful(profile.funding) && !profile.funding.toLowerCase().includes("not listed in the catalog") && (
+        <Block label="Funding">{profile.funding}</Block>
+      )}
+
       {/* Snapshot */}
       <div className="mt-5 grid gap-px overflow-hidden border border-paper-line bg-paper-line sm:grid-cols-2">
         <Fact label="Eligible applicants" value={field(profile.applicants)} />
@@ -185,24 +194,48 @@ function OpportunityBrief({ index, opp }: { index: number; opp: AnalyzedOpportun
       {/* Guidance */}
       <Block label="In your application">{tailored.applicationGuidance}</Block>
 
-      {/* Sources */}
-      <div className="mt-5">
-        <Label>Sources</Label>
-        <ul className="mt-1.5 space-y-1">
-          {opp.summary.sourcesUsed.slice(0, 4).map((s, i) => (
-            <li key={i} className="font-mono text-[11.5px] text-paper-muted">
-              {s.startsWith("http") ? (
-                <a href={s} target="_blank" rel="noreferrer" className="underline hover:text-paper-ink">
-                  {s}
-                </a>
-              ) : (
-                s
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
+      {meaningful(tailored.teamingAndEligibility) && (
+        <Block label="Teaming & eligibility">{tailored.teamingAndEligibility}</Block>
+      )}
+
+      {/* Sources — one labeled link, no duplicate URLs in prose above */}
+      <SourcesList sources={opp.summary.sourcesUsed} officialLink={profile.link} />
     </section>
+  );
+}
+
+function SourcesList({
+  sources,
+  officialLink,
+}: {
+  sources: string[];
+  officialLink?: string;
+}) {
+  const formatted = formatReportSources(sources, officialLink);
+  if (formatted.length === 0) return null;
+
+  return (
+    <div className="mt-5">
+      <Label>Sources</Label>
+      <ul className="mt-1.5 space-y-1.5">
+        {formatted.map((s) => (
+          <li key={s.label + (s.href ?? "")} className="text-[13px] text-paper-muted">
+            {s.href ? (
+              <a
+                href={s.href}
+                target="_blank"
+                rel="noreferrer"
+                className="font-mono text-[12px] underline hover:text-paper-ink"
+              >
+                {s.label}
+              </a>
+            ) : (
+              s.label
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 

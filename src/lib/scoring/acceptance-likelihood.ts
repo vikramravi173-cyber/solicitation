@@ -1,5 +1,5 @@
 import type { CompanyProfile } from "@/lib/company/questionnaire";
-import { federalExperienceText, parseMultiValue } from "@/lib/company/questionnaire";
+import { companyCapabilityText, federalExperienceText, parseMultiValue } from "@/lib/company/questionnaire";
 import type { AcceptanceAssessment } from "@/lib/domain/types";
 import { departmentMatchesTarget } from "@/lib/matching/department-match";
 import { overlapScore } from "@/lib/matching/text-utils";
@@ -25,7 +25,7 @@ export async function scoreAcceptanceLikelihood(
   const recommendedActions: string[] = [];
 
   const fitScore = overlapScore(
-    company.technologyAndCapabilities,
+    companyCapabilityText(company),
     [profile.displayTitle, profile.keyWords, profile.summary].join(" "),
   );
 
@@ -56,6 +56,19 @@ export async function scoreAcceptanceLikelihood(
   ) {
     score += 12;
     strengths.push("Prior SBIR/STTR history relevant to this solicitation type.");
+  }
+
+  if (company.sbirSttrHistory.trim().length > 20) {
+    score += 6;
+    strengths.push("Documented SBIR/STTR award history in company profile.");
+  }
+
+  if (
+    company.businessStatus.toLowerCase().includes("small business") &&
+    solicitation.applicants.toLowerCase().includes("small")
+  ) {
+    score += 4;
+    strengths.push("Small business status may align with set-aside eligibility.");
   }
 
   if (profile.catalogGaps.length > 0) {
@@ -102,7 +115,7 @@ export async function scoreAcceptanceLikelihood(
 
   recommendedActions.push("Map solicitation requirements to a compliance matrix before bid decision.");
   if (profile.link) {
-    recommendedActions.push(`Review full solicitation at ${profile.link}`);
+    recommendedActions.push("Download and review the official solicitation package.");
   }
 
   if (profile.requirements.toLowerCase().includes("quad chart")) {

@@ -62,21 +62,11 @@ export function synthesizeNarrative(
   return result.join("\n\n");
 }
 
-/** Convert an array of talking points into a cohesive guidance paragraph. */
+/** Convert talking points into readable guidance — one sentence each, no awkward glue phrases. */
 export function synthesizeTalkingPoints(points: string[]): string {
   const cleaned = points
     .map((p) => p.replace(/^Action:\s*/i, "").trim())
     .filter(Boolean);
 
-  if (cleaned.length === 0) return "";
-  if (cleaned.length === 1) return ensurePeriod(cleaned[0]);
-
-  const intro = ensurePeriod(cleaned[0]);
-  const rest = cleaned.slice(1).map((p, i) => {
-    const s = ensurePeriod(p);
-    if (i === 0) return `Also emphasize that ${s.charAt(0).toLowerCase()}${s.slice(1)}`;
-    return s;
-  });
-
-  return [intro, ...rest].join(" ");
+  return synthesizeSentences(cleaned);
 }

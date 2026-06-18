@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Supabase starter — Capture Deck</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 480px; margin: 2rem auto; padding: 0 1rem; }
+    input, button { display: block; width: 100%; margin: 0.5rem 0; padding: 0.5rem; box-sizing: border-box; }
+    #notes-list { padding-left: 1.25rem; }
+  </style>
+</head>
+<body>
+
+<div id="auth-section">
+  <h2>Sign in</h2>
+  <input id="email" type="email" placeholder="Email" />
+  <input id="password" type="password" placeholder="Password" />
+  <button onclick="signUp()">Sign up</button>
+  <button onclick="signIn()">Sign in</button>
+  <p id="auth-msg"></p>
+</div>
+
+<div id="app-section" style="display:none">
+  <p>Welcome, <span id="user-email"></span></p>
+  <button onclick="signOut()">Sign out</button>
+  <hr />
+  <h3>Your notes</h3>
+  <input id="note-input" type="text" placeholder="New note..." />
+  <button onclick="addNote()">Add</button>
+  <ul id="notes-list"></ul>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth.js"></script>
+<script src="db.js"></script>
+
+<script>
+  const SUPABASE_URL = "YOUR_SUPABASE_URL";
+  const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+
+  const { createClient } = supabase;
+  const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  client.auth.getSession().then(({ data: { session } }) => {
+    if (session) showApp(session.user);
+  });
+
+  client.auth.onAuthStateChange((_event, session) => {
+    if (session) showApp(session.user);
+    else showAuth();
+  });
+
+  function showApp(user) {
+    document.getElementById("auth-section").style.display = "none";
+    document.getElementById("app-section").style.display = "block";
+    document.getElementById("user-email").textContent = user.email;
+    loadNotes(client);
+  }
+
+  function showAuth() {
+    document.getElementById("auth-section").style.display = "block";
+    document.getElementById("app-section").style.display = "none";
+  }
+</script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 import type { CompanyProfile } from "@/lib/company/questionnaire";
-import { federalExperienceText } from "@/lib/company/questionnaire";
+import { companyCapabilityText, federalExperienceText } from "@/lib/company/questionnaire";
 import type {
   AcceptanceAssessment,
   MatchedSolicitation,
@@ -26,7 +26,7 @@ export async function summarizeOpportunity(
   const tailored = tailorProfileToCompany(company, profile, match, acceptance);
 
   const fitScore = overlapScore(
-    company.technologyAndCapabilities,
+    companyCapabilityText(company),
     [profile.displayTitle, profile.keyWords, profile.summary].join(" "),
   );
 

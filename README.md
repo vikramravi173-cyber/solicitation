@@ -13,6 +13,18 @@ entirely in the browser — **no API keys, no backend.**
 - **Vite + React + TypeScript** (static SPA)
 - **Tailwind CSS** — "Capture Deck" design system
 - **react-router-dom** — `/` catalog, `/match` questionnaire, `/report` dossier
+- **Supabase** (optional) — auth, notes, lobby campaign cloud sync
+
+## Supabase setup (optional)
+
+1. Create a project at [supabase.com](https://supabase.com)
+2. Run `supabase/schema.sql` in the SQL Editor
+3. Copy `.env.example` → `.env.local` and set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
+4. `npm install` then `npm run dev`
+
+Without Supabase, the app runs fully offline with localStorage (same as before).
+
+A vanilla HTML starter matching the auth + notes pattern lives in `supabase-starter/`.
 
 ## Quick start
 
@@ -50,7 +62,7 @@ npm run build                  # rebuild so the SPA picks up new rows
 
 | Step | Engine |
 |---|---|
-| Matching | Fuzzy text match, agency fit, solicitation type |
+| Matching | Text match, agency fit, solicitation type |
 | Profiles | Synthesized from catalog fields |
 | Estimated fit | Rule-based scoring from profile fit and risk flags |
 | Dossier | Ranked assembly of matches, scores, and tailored guidance |
