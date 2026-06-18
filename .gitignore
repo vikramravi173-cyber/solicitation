@@ -28,6 +28,9 @@ yarn-error.log*
 .env
 .env*.local
 
+# local deploy tooling
+.vercel
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
