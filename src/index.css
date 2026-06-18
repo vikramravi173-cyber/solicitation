@@ -136,6 +136,14 @@
   body {
     background: #fff;
   }
+  section[id^="opp-"] {
+    break-before: page;
+    page-break-before: always;
+  }
+  section[id^="opp-"]:first-of-type {
+    break-before: auto;
+    page-break-before: auto;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

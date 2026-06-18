@@ -10,7 +10,6 @@ import { overlapScore } from "@/lib/matching/text-utils";
 import { departmentMatchesTarget } from "@/lib/matching/department-match";
 import type { SolicitationProfile } from "@/lib/reporting/build-solicitation-profile";
 import { buildSolicitationProfile } from "@/lib/reporting/build-solicitation-profile";
-import { synthesizeNarrative } from "@/lib/reporting/synthesize-text";
 import { tailorProfileToCompany } from "@/lib/reporting/tailor-to-company";
 import type { SolicitationRow } from "@/lib/solicitations/types";
 
@@ -22,8 +21,8 @@ export async function summarizeOpportunity(
   acceptance: AcceptanceAssessment,
   profileInput?: SolicitationProfile,
 ): Promise<OpportunitySummary> {
-  const profile = profileInput ?? buildSolicitationProfile(solicitation, research);
-  const tailored = tailorProfileToCompany(company, profile, match, acceptance);
+  const profile = profileInput ?? (await buildSolicitationProfile(solicitation, research));
+  const tailored = await tailorProfileToCompany(company, profile, match, acceptance);
 
   const fitScore = overlapScore(
     companyCapabilityText(company),
@@ -67,10 +66,9 @@ export async function summarizeOpportunity(
   if (!profile.link) risksAndGaps.push("No solicitation URL in catalog — verify details manually.");
   if (fitScore < 0.2) risksAndGaps.push("Low keyword overlap — may require teaming or scope stretch.");
 
-  const synthesizedBrief = synthesizeNarrative(
-    [profile.synthesizedOverview, tailored.fullBrief].filter(Boolean),
-    ["Based on your profile,"],
-  );
+  const synthesizedBrief = [profile.synthesizedOverview, tailored.fullBrief]
+    .filter(Boolean)
+    .join("\n\n");
 
   const onePageSummary = synthesizedBrief;
 

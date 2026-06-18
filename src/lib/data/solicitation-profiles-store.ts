@@ -16,10 +16,11 @@ export function loadSolicitationProfilePool(
   return cache;
 }
 
-export function getOrBuildProfile(solicitation: SolicitationRow): SolicitationProfile {
-  const existing = cache.get(solicitation.rowIndex);
-  if (existing) return existing;
-  const profile = buildSolicitationProfile(solicitation);
+/** Always rebuilds so profile text reflects latest formatting rules. */
+export async function getOrBuildProfile(
+  solicitation: SolicitationRow,
+): Promise<SolicitationProfile> {
+  const profile = await buildSolicitationProfile(solicitation);
   cache.set(solicitation.rowIndex, profile);
   return profile;
 }

@@ -1,8 +1,9 @@
 # Solicitations Matcher
 
 A static web app that matches a company against federal solicitations, scores fit,
-and produces a printable pursuit dossier. Matching, scoring, and reporting run
-entirely in the browser — **no API keys, no backend.**
+and produces a printable pursuit dossier. Matching and scoring run in the browser;
+AI-generated report sections call Claude through a **server-side proxy** (never
+exposes your API key in the bundle).
 
 **Live (GitHub Pages):** https://vikramravi173-cyber.github.io/solicitation/
 
@@ -31,12 +32,37 @@ The **lobby toolkit** (`/lobby`) requires sign-in. Catalog search and company ma
 
 ```bash
 cp .env.example .env.local
-# Edit .env.local with your VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+# Edit .env.local:
+#   VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+#   ANTHROPIC_API_KEY (for AI summaries via the dev proxy)
 npm install
 npm run dev
 ```
 
-### 3. GitHub Pages (production)
+Local dev routes Claude calls to `POST /api/claude` (Vite middleware). The
+`ANTHROPIC_API_KEY` stays on your machine — it is **not** prefixed with `VITE_`.
+
+### 3. Claude proxy (production)
+
+Deploy the Supabase Edge Function and set your API key as a secret:
+
+```bash
+# One-time: install Supabase CLI, link your project
+supabase login
+supabase link --project-ref YOUR_PROJECT_REF
+
+# Deploy the proxy function
+supabase functions deploy claude
+
+# Store the Anthropic key server-side (never in the frontend bundle)
+supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
+```
+
+The app automatically calls `{VITE_SUPABASE_URL}/functions/v1/claude` when
+`VITE_SUPABASE_URL` is set (production build). Override with `VITE_CLAUDE_API_URL`
+if needed.
+
+### 4. GitHub Pages (production)
 
 Add these **repository secrets** (Settings → Secrets and variables → Actions):
 

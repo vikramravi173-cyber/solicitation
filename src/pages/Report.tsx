@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { loadAnalysis } from "@/state/analysis";
 import type { AnalysisResult, AnalyzedOpportunity } from "@/lib/domain/types";
 import { Seal } from "@/components/Seal";
-import { fitTone, recommendationTone } from "@/lib/ui/fit";
+import { SummaryContent } from "@/components/report/SummaryContent";
+import { fitTone } from "@/lib/ui/fit";
 import { field, meaningful } from "@/lib/ui/format";
 import { formatReportTimestamp } from "@/lib/reporting/format-display";
 import { formatReportSources } from "@/lib/reporting/format-sources";
@@ -32,7 +33,6 @@ export function ReportPage() {
 
   return (
     <div className="bg-paper text-paper-ink">
-      {/* Dossier masthead — dark strip bridging deck → paper */}
       <div className="no-print border-b border-line bg-ink">
         <div className="mx-auto flex max-w-dossier items-center justify-between px-6 py-3">
           <span className="font-mono text-[11px] uppercase tracking-eyebrow text-brass">
@@ -50,7 +50,6 @@ export function ReportPage() {
       </div>
 
       <div className="mx-auto grid max-w-dossier gap-10 px-6 py-12 lg:grid-cols-[200px_1fr]">
-        {/* Contents rail */}
         <nav className="no-print order-2 lg:order-1">
           <div className="sticky top-20 space-y-4">
             <div className="font-mono text-[11px] uppercase tracking-eyebrow text-paper-muted">
@@ -80,7 +79,6 @@ export function ReportPage() {
           </div>
         </nav>
 
-        {/* Dossier body */}
         <article className="order-1 lg:order-2">
           <header className="border-b-2 border-paper-ink pb-6">
             <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-eyebrow text-paper-muted">
@@ -97,15 +95,23 @@ export function ReportPage() {
             </p>
           </header>
 
-          <Prose label="Executive summary" body={result.report.executiveSummary} />
+          <SummarySection label="Executive summary" body={result.report.executiveSummary} />
 
-          <div className="mt-12 space-y-12">
+          {result.report.recommendedOpportunities.length > 1 && (
+            <RankedTable opportunities={result.report.recommendedOpportunities} />
+          )}
+
+          <div className="mt-12 space-y-16">
             {ranked.map((opp, i) => (
               <OpportunityBrief key={i} index={i} opp={opp} />
             ))}
           </div>
 
-          <Prose label="Overall strategy" body={result.report.overallStrategy} className="mt-12" />
+          <SummarySection
+            label="Overall strategy"
+            body={result.report.overallStrategy}
+            className="mt-16"
+          />
 
           <footer className="mt-12 border-t border-paper-line pt-5">
             <p className="font-mono text-[11px] leading-relaxed text-paper-muted">
@@ -121,13 +127,78 @@ export function ReportPage() {
   );
 }
 
+function RankedTable({
+  opportunities,
+}: {
+  opportunities: AnalysisResult["report"]["recommendedOpportunities"];
+}) {
+  return (
+    <div className="mt-8 overflow-hidden border border-paper-line">
+      <div className="bg-paper-2 px-4 py-2.5">
+        <span className="font-mono text-[11px] uppercase tracking-eyebrow text-paper-muted">
+          At a glance
+        </span>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[540px] text-left text-[13px]">
+          <thead>
+            <tr className="border-b border-paper-line bg-paper">
+              <th className="px-4 py-2 font-mono text-[10px] uppercase tracking-eyebrow text-paper-muted">
+                #
+              </th>
+              <th className="px-4 py-2 font-mono text-[10px] uppercase tracking-eyebrow text-paper-muted">
+                Opportunity
+              </th>
+              <th className="px-4 py-2 font-mono text-[10px] uppercase tracking-eyebrow text-paper-muted">
+                Due
+              </th>
+              <th className="px-4 py-2 font-mono text-[10px] uppercase tracking-eyebrow text-paper-muted">
+                Fit
+              </th>
+              <th className="px-4 py-2 font-mono text-[10px] uppercase tracking-eyebrow text-paper-muted">
+                Action
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {opportunities.map((opp) => {
+              const tone = fitTone(opp.likelihoodLabel);
+              return (
+                <tr key={opp.rank} className="border-b border-paper-line/60 last:border-0">
+                  <td className="px-4 py-3 font-mono tabular text-paper-muted">{opp.rank}</td>
+                  <td className="px-4 py-3">
+                    <div className="font-medium leading-snug">{opp.title}</div>
+                    <div className="mt-0.5 font-mono text-[11px] text-paper-muted">
+                      {opp.department}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 font-mono text-[12px] tabular text-paper-muted">
+                    {opp.dueDate}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="font-mono text-sm font-semibold tabular" style={{ color: tone.hex }}>
+                      {opp.likelihoodScore}%
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-[12px] text-paper-muted">
+                    {opp.pursuitRecommendation}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 function OpportunityBrief({ index, opp }: { index: number; opp: AnalyzedOpportunity }) {
   const { profile, tailored } = opp.summary;
   const tone = fitTone(opp.acceptance.likelihoodLabel);
 
   return (
-    <section id={`opp-${index}`} className="scroll-mt-20">
-      {/* Header */}
+    <section id={`opp-${index}`} className="scroll-mt-20 break-inside-avoid">
       <div className="flex items-start justify-between gap-6 border-b border-paper-line pb-5">
         <div className="flex-1">
           <div className="flex items-center gap-3">
@@ -156,49 +227,49 @@ function OpportunityBrief({ index, opp }: { index: number; opp: AnalyzedOpportun
         />
       </div>
 
-      {/* Score readout */}
-      <div className="mt-5 grid gap-4 sm:grid-cols-2">
-        <ScoreBar
-          label="Keyword & domain match"
-          value={opp.match.matchScore}
-          hex="#7C6231"
-        />
-        <ScoreBar label="Estimated fit" value={opp.acceptance.likelihoodScore} hex={tone.hex} />
-      </div>
-
-      {/* Why it fits */}
-      <Block label="Why it fits you">{tailored.whyApply}</Block>
-
-      {meaningful(profile.synthesizedOverview) && (
-        <Block label="Opportunity overview">{profile.synthesizedOverview}</Block>
-      )}
-
-      {meaningful(profile.funding) && !profile.funding.toLowerCase().includes("not listed in the catalog") && (
-        <Block label="Funding">{profile.funding}</Block>
-      )}
-
-      {/* Snapshot */}
       <div className="mt-5 grid gap-px overflow-hidden border border-paper-line bg-paper-line sm:grid-cols-2">
-        <Fact label="Eligible applicants" value={field(profile.applicants)} />
         <Fact label="Due date" value={field(profile.dueDate)} mono />
+        <Fact label="Eligible applicants" value={field(profile.applicants)} />
         <Fact label="Organization" value={field(profile.organization)} />
         <Fact label="Solicitation #" value={field(profile.solicitationNumber)} mono />
       </div>
 
-      {/* Strengths & gaps */}
-      <div className="mt-5 grid gap-5 sm:grid-cols-2">
+      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+        <ScoreBar label="Keyword & domain match" value={opp.match.matchScore} hex="#7C6231" />
+        <ScoreBar label="Estimated fit" value={opp.acceptance.likelihoodScore} hex={tone.hex} />
+      </div>
+
+      <Block label="Why it fits you">
+        <SummaryContent body={tailored.whyApply} />
+      </Block>
+
+      {meaningful(profile.synthesizedOverview) && (
+        <Block label="Opportunity overview">
+          <SummaryContent body={profile.synthesizedOverview} />
+        </Block>
+      )}
+
+      {meaningful(profile.funding) && !profile.funding.toLowerCase().includes("not listed in the catalog") && (
+        <Block label="Funding" compact>
+          <SummaryContent body={profile.funding} />
+        </Block>
+      )}
+
+      <div className="mt-6 grid gap-6 sm:grid-cols-2">
         <List label="Strengths" tone="#3F8F6E" items={opp.acceptance.strengths.slice(0, 4)} />
         <List label="Gaps to close" tone="#C2603F" items={opp.acceptance.weaknesses.slice(0, 4)} />
       </div>
 
-      {/* Guidance */}
-      <Block label="In your application">{tailored.applicationGuidance}</Block>
+      <Block label="Next steps for your application">
+        <SummaryContent body={tailored.applicationGuidance} numbered />
+      </Block>
 
       {meaningful(tailored.teamingAndEligibility) && (
-        <Block label="Teaming & eligibility">{tailored.teamingAndEligibility}</Block>
+        <Block label="Teaming & eligibility">
+          <SummaryContent body={tailored.teamingAndEligibility} />
+        </Block>
       )}
 
-      {/* Sources — one labeled link, no duplicate URLs in prose above */}
       <SourcesList sources={opp.summary.sourcesUsed} officialLink={profile.link} />
     </section>
   );
@@ -215,7 +286,7 @@ function SourcesList({
   if (formatted.length === 0) return null;
 
   return (
-    <div className="mt-5">
+    <div className="mt-6">
       <Label>Sources</Label>
       <ul className="mt-1.5 space-y-1.5">
         {formatted.map((s) => (
@@ -268,11 +339,19 @@ function Label({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Block({ label, children }: { label: string; children: React.ReactNode }) {
+function Block({
+  label,
+  children,
+  compact = false,
+}: {
+  label: string;
+  children: React.ReactNode;
+  compact?: boolean;
+}) {
   return (
-    <div className="mt-5">
+    <div className={compact ? "mt-5" : "mt-6"}>
       <Label>{label}</Label>
-      <p className="mt-1.5 text-[14.5px] leading-relaxed text-paper-ink/90">{children}</p>
+      <div className="mt-2">{children}</div>
     </div>
   );
 }
@@ -307,7 +386,7 @@ function List({ label, tone, items }: { label: string; tone: string; items: stri
   );
 }
 
-function Prose({
+function SummarySection({
   label,
   body,
   className = "",
@@ -317,19 +396,12 @@ function Prose({
   className?: string;
 }) {
   return (
-    <section className={className}>
+    <section className={`mt-8 ${className}`}>
       <h2 className="font-mono text-[11px] uppercase tracking-eyebrow text-paper-muted">
         {label}
       </h2>
-      <div className="mt-2 space-y-3">
-        {body
-          .split(/\n\n+/)
-          .filter(Boolean)
-          .map((p, i) => (
-            <p key={i} className="text-[15px] leading-relaxed text-paper-ink/90">
-              {p}
-            </p>
-          ))}
+      <div className="mt-3 rounded-sm border border-paper-line bg-paper-2/40 px-4 py-3">
+        <SummaryContent body={body} />
       </div>
     </section>
   );

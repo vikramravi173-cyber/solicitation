@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import type { SolicitationRow } from "@/lib/solicitations/types";
 import { resolveDisplayTitle } from "@/lib/solicitations/display-title";
 import { getOrBuildProfile } from "@/lib/data/solicitation-profiles-store";
+import type { SolicitationProfile } from "@/lib/reporting/build-solicitation-profile";
 import { runKeywordOpportunityAnalysis } from "@/lib/pipeline/analyze";
 import { storeAnalysis } from "@/state/analysis";
+import { SummaryContent } from "@/components/report/SummaryContent";
 import { field, meaningful } from "@/lib/ui/format";
 
 export function OpportunityDrawer({
@@ -16,6 +18,8 @@ export function OpportunityDrawer({
 }) {
   const navigate = useNavigate();
   const [building, setBuilding] = useState(false);
+  const [profile, setProfile] = useState<SolicitationProfile | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -27,10 +31,33 @@ export function OpportunityDrawer({
     }
   }, [row, onClose]);
 
+  useEffect(() => {
+    if (!row) {
+      setProfile(null);
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingProfile(true);
+    getOrBuildProfile(row)
+      .then((built) => {
+        if (!cancelled) setProfile(built);
+      })
+      .catch(() => {
+        if (!cancelled) setProfile(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingProfile(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [row]);
+
   if (!row) return null;
 
   const title = resolveDisplayTitle(row);
-  const profile = getOrBuildProfile(row);
   const query = meaningful(row.keyWords) ? row.keyWords : title;
 
   async function buildDossier() {
@@ -96,18 +123,16 @@ export function OpportunityDrawer({
           )}
 
           <Section label="Catalog brief">
-            <div className="space-y-3 text-[14px] leading-relaxed text-mist/90">
-              {profile.synthesizedOverview
-                .split(/\n\n+/)
-                .filter(Boolean)
-                .slice(0, 5)
-                .map((p, i) => (
-                  <p key={i}>{p}</p>
-                ))}
-            </div>
+            {loadingProfile ? (
+              <p className="text-[13px] text-faint">Generating brief…</p>
+            ) : profile ? (
+              <SummaryContent body={profile.synthesizedOverview} variant="panel" />
+            ) : (
+              <p className="text-[13px] text-faint">Brief unavailable.</p>
+            )}
           </Section>
 
-          {profile.catalogGaps.length > 0 && (
+          {profile && profile.catalogGaps.length > 0 && (
             <Section label="Data confidence">
               <p className="text-[13px] leading-relaxed text-faint">
                 Some catalog fields are incomplete ({profile.catalogGaps.join(", ").toLowerCase()}).

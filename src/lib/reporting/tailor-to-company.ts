@@ -1,54 +1,29 @@
 import type { CompanyProfile } from "@/lib/company/questionnaire";
-import { companyCapabilityText, federalExperienceText, parseMultiValue } from "@/lib/company/questionnaire";
+import { companyCapabilityText } from "@/lib/company/questionnaire";
 import type { AcceptanceAssessment, MatchedSolicitation } from "@/lib/domain/types";
-import { departmentMatchesTarget } from "@/lib/matching/department-match";
 import { overlapScore } from "@/lib/matching/text-utils";
+import { callClaude } from "@/lib/ai/call-claude";
 import type { SolicitationProfile } from "./build-solicitation-profile";
-import { synthesizeNarrative, synthesizeSentences, synthesizeTalkingPoints } from "./synthesize-text";
-import { filterApplicationActions } from "./format-sources";
 
 export interface TailoredOpportunityReport {
   whyApply: string;
   likelihoodNarrative: string;
   applicationTalkingPoints: string[];
-  /** Cohesive prose version of application talking points. */
   applicationGuidance: string;
   teamingAndEligibility: string;
   risksForCompany: string[];
-  /** Single flowing brief combining fit, likelihood, guidance, and risks. */
   fullBrief: string;
   pursuitRecommendation: "Strong pursue" | "Pursue with teaming" | "Monitor" | "Low priority";
 }
 
-function matchingKeywords(company: CompanyProfile, profile: SolicitationProfile): string[] {
-  const corpus = [
-    profile.displayTitle,
-    profile.keyWords,
-    profile.summary,
-    profile.solicitationType,
-    profile.organization,
-  ].join(" ");
-
-  const capabilityText = companyCapabilityText(company);
-  const companyTokens = capabilityText
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, " ")
-    .split(/\s+/)
-    .filter((w) => w.length > 3);
-
-  const seen = new Set<string>();
-  const hits: string[] = [];
-  const lower = corpus.toLowerCase();
-
-  for (const token of companyTokens) {
-    if (lower.includes(token) && !seen.has(token)) {
-      seen.add(token);
-      hits.push(token);
-      if (hits.length >= 8) break;
-    }
-  }
-  return hits;
-}
+const TAILOR_SYSTEM = `You are a federal grants analyst writing pursuit intelligence briefs for a government affairs consultancy.
+Rules:
+- Write in plain, direct prose. No bullet points unless asked.
+- Never repeat the opportunity title or company name more than once per response.
+- Each response must contain ONLY new information — do not restate the input data back.
+- Be specific. Generic observations like "your capabilities align" are not acceptable.
+- Maximum 3 sentences per response unless instructed otherwise.
+- No em dashes.`;
 
 function pursuitLevel(
   matchScore: number,
@@ -61,164 +36,82 @@ function pursuitLevel(
   return "Low priority";
 }
 
-function formatCapabilitySnippet(capabilityText: string, profile: SolicitationProfile): string {
-  const trimmed = capabilityText.trim();
-  if (!trimmed) return profile.keyWords || profile.displayTitle;
-
-  // Single catalog-style token (e.g. natural_resources) — use human context instead
-  if (/^[\w-]+$/.test(trimmed) && trimmed.length < 40) {
-    if (profile.keyWords && profile.keyWords !== trimmed) return profile.keyWords;
-    return profile.displayTitle.slice(0, 120);
-  }
-
-  return trimmed.length > 150 ? `${trimmed.slice(0, 150)}…` : trimmed;
-}
-
-export function tailorProfileToCompany(
+export async function tailorProfileToCompany(
   company: CompanyProfile,
   profile: SolicitationProfile,
   match: MatchedSolicitation,
   acceptance: AcceptanceAssessment,
-): TailoredOpportunityReport {
+): Promise<TailoredOpportunityReport> {
   const capabilityText = companyCapabilityText(company);
-  const matchRationale =
-    match?.matchRationale?.trim() ||
-    "your capabilities and target agencies show alignment with this solicitation";
-
   const matchScore = match?.matchScore ?? 0;
-  const keywords = matchingKeywords(company, profile);
   const fitScore = overlapScore(
     capabilityText,
     [profile.displayTitle, profile.keyWords, profile.summary].join(" "),
   );
 
-  const whyApplySupporting: string[] = [];
-  if (keywords.length > 0) {
-    whyApplySupporting.push(
-      `Your capabilities map to this solicitation's focus on ${keywords.slice(0, 5).join(", ")}${keywords.length > 5 ? ", and related areas" : ""}.`,
-    );
-  }
-  if (departmentMatchesTarget(company.targetDepartments, profile.department)) {
-    whyApplySupporting.push(
-      `It aligns with your stated priority to pursue work with ${profile.department}, making this a strategic fit rather than an opportunistic bid.`,
-    );
-  }
-  if (profile.portfolioFlags.length > 0) {
-    whyApplySupporting.push(
-      `The catalog also flags thematic relevance for companies in the ${profile.portfolioFlags.join(", ")} space.`,
-    );
-  }
+  const context = `
+OPPORTUNITY: ${profile.displayTitle}
+Agency: ${profile.department}${profile.organization ? ` / ${profile.organization}` : ""}
+Type: ${profile.solicitationType || "Not specified"}
+Due: ${profile.dueDate || "Not listed"}
+Focus areas: ${profile.keyWords || "Not listed"}
+Funding: ${profile.funding || "Not listed"}
+Eligibility: ${profile.applicants || "Not listed"}
+Evaluation criteria: ${profile.evaluationCriteria || "Not listed"}
+Submission requirements: ${profile.requirements || "Not listed"}
 
-  const whyApply = synthesizeSentences([
-    `This opportunity warrants your attention because ${matchRationale}`,
-    ...whyApplySupporting,
+COMPANY:
+Capabilities: ${capabilityText || "Not specified"}
+Federal experience: ${company.federalExperienceLevel}${company.federalExperienceDetails ? ` — ${company.federalExperienceDetails}` : ""}
+Differentiators: ${company.differentiators || "None listed"}
+TRL: ${company.technologyReadinessLevel || "Not specified"}
+SBIR/STTR history: ${company.sbirSttrHistory || "None"}
+Business status: ${company.businessStatus || "Not specified"}
+Target agencies: ${company.targetDepartments || "Not specified"}
+
+SCORES: Keyword match ${matchScore}%, Acceptance likelihood ${acceptance.likelihoodScore}% (${acceptance.likelihoodLabel})
+`.trim();
+
+  const [whyApply, applicationGuidance, teamingAndEligibility] = await Promise.all([
+    callClaude({
+      system: TAILOR_SYSTEM,
+      prompt: `${context}
+
+Write a 2-3 sentence "Why it fits" section. Explain specifically why this company's capabilities match this opportunity's technical scope. Reference actual capability and focus area details from above — do not use generic alignment language.`,
+    }),
+    callClaude({
+      system: TAILOR_SYSTEM,
+      prompt: `${context}
+
+Write 3-4 sentences of application strategy guidance. Be specific to this opportunity's evaluation criteria and submission structure. Tell the company exactly what to lead with, what to address explicitly, and what would strengthen the proposal. Do not repeat the opportunity title.`,
+    }),
+    callClaude({
+      system: TAILOR_SYSTEM,
+      prompt: `${context}
+
+Write 1-2 sentences on teaming and eligibility specific to this opportunity. If the company has limited federal experience, say who they should team with and why. If they can compete directly, confirm that and note any conditions.`,
+    }),
   ]);
 
-  const likelihoodNarrative = synthesizeSentences([
-    `We assess your likelihood of success as ${acceptance.likelihoodLabel.toLowerCase()} (${acceptance.likelihoodScore}%), reflecting how well your profile matches this solicitation, your federal experience, and how complete the available catalog data is.`,
+  const likelihoodNarrative = [
+    `Likelihood of success assessed at ${acceptance.likelihoodScore}% (${acceptance.likelihoodLabel.toLowerCase()}), based on ${Math.round(fitScore * 100)}% keyword overlap, ${company.federalExperienceLevel.toLowerCase()} federal experience, and catalog data completeness.`,
     acceptance.rationale,
-    fitScore >= 0.3
-      ? `Your technology description shows strong thematic overlap with this opportunity.`
-      : `Thematic overlap is moderate; lean on differentiators and teaming to strengthen the proposal.`,
-  ]);
+  ].filter(Boolean).join(" ");
 
-  const applicationTalkingPoints: string[] = [];
-
-  const capabilitySnippet = formatCapabilitySnippet(capabilityText, profile);
-
-  applicationTalkingPoints.push(
-    `Open with how your capabilities (${capabilitySnippet}) address the solicitation's technical scope and stated focus areas.`,
-  );
-
-  if (company.differentiators.trim()) {
-    applicationTalkingPoints.push(`Highlight differentiators: ${company.differentiators}`);
-  }
-
-  applicationTalkingPoints.push(
-    `Map your TRL (${company.technologyReadinessLevel}) to the solicitation's expected maturity and include a clear transition plan.`,
-  );
-
-  if (federalExperienceText(company).includes("sbir") && profile.solicitationType.toLowerCase().includes("sbir")) {
-    applicationTalkingPoints.push(
-      "Reference prior SBIR/STTR awards and Phase transitions in your qualifications volume.",
-    );
-  }
-
-  if (company.sbirSttrHistory.trim()) {
-    applicationTalkingPoints.push(`Cite SBIR/STTR history: ${company.sbirSttrHistory.slice(0, 120)}`);
-  }
-
-  const govFunding = parseMultiValue(company.governmentFundingSources);
-  if (govFunding.length > 0 && !govFunding[0]?.startsWith("None")) {
-    applicationTalkingPoints.push(
-      `Note government funding history (${govFunding.join("; ")}) where cost-share or credibility matters.`,
-    );
-  }
-
-  if (profile.evaluationCriteria.toLowerCase().includes("%")) {
-    applicationTalkingPoints.push(
-      "Structure your proposal sections to mirror the published evaluation weightings — lead with the highest-weighted criteria.",
-    );
-  }
-
-  if (profile.funding && !profile.funding.toLowerCase().includes("not listed in the catalog")) {
-    applicationTalkingPoints.push(`Align your budget narrative with published funding: ${profile.funding.slice(0, 160)}`);
-  }
-
-  if (profile.requirements && profile.requirements.length > 40) {
-    applicationTalkingPoints.push(
-      `Address submission requirements explicitly: ${profile.requirements.slice(0, 180)}`,
-    );
-  }
-
-  applicationTalkingPoints.push(
-    ...filterApplicationActions(acceptance.recommendedActions).slice(0, 3),
-  );
-
-  const applicationGuidance = synthesizeTalkingPoints(applicationTalkingPoints);
-
-  let teamingAndEligibility = profile.whoCanSubmit;
-  if (company.businessStatus.trim()) {
-    teamingAndEligibility = synthesizeSentences([
-      teamingAndEligibility,
-      `Your stated business status (${company.businessStatus.slice(0, 120)}) should be cross-checked against eligibility and set-aside requirements.`,
-    ]);
-  }
-  if (profile.applicants.toLowerCase().includes("govt") || profile.applicants.toLowerCase().includes("govt only")) {
-    teamingAndEligibility = synthesizeSentences([
-      teamingAndEligibility,
-      `You likely cannot submit as prime; identify a ${profile.department} sponsor and position your firm as the industry teammate delivering the technical solution.`,
-    ]);
-  } else if (company.federalExperienceLevel.toLowerCase().includes("none")) {
-    teamingAndEligibility = synthesizeSentences([
-      teamingAndEligibility,
-      "Limited federal experience suggests pursuing as a subcontractor to an experienced prime while you build past performance.",
-    ]);
-  }
+  const applicationTalkingPoints = applicationGuidance
+    .split(/(?<=[.!?])\s+/)
+    .filter((s) => s.length > 20);
 
   const risksForCompany = [...acceptance.weaknesses];
   if (profile.catalogGaps.length > 0) {
-    risksForCompany.push(`Catalog data gaps: ${profile.catalogGaps.join("; ")} — verify before committing bid resources.`);
+    risksForCompany.push(
+      `Catalog gaps (${profile.catalogGaps.join("; ")}) — verify all details in the official solicitation before committing bid resources.`,
+    );
   }
 
-  const risksNarrative =
-    risksForCompany.length > 0
-      ? synthesizeSentences([
-          `Before bidding, account for the following risks: ${risksForCompany.slice(0, 3).join("; ")}.`,
-        ])
-      : "";
-
-  const fullBrief = synthesizeNarrative(
-    [whyApply, likelihoodNarrative, applicationGuidance, teamingAndEligibility, risksNarrative].filter(
-      Boolean,
-    ),
-    [
-      "Looking at your odds,",
-      "In your application,",
-      "On teaming and eligibility,",
-      "Finally,",
-    ],
-  );
+  const fullBrief = [whyApply, likelihoodNarrative, applicationGuidance, teamingAndEligibility]
+    .filter(Boolean)
+    .join("\n\n");
 
   return {
     whyApply,

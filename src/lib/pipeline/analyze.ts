@@ -17,7 +17,7 @@ import { companyProfileFromKeywords } from "@/lib/company/keyword-profile";
 import { resolveDisplayTitle } from "@/lib/solicitations/display-title";
 import { buildFinalReport } from "@/lib/reporting/build-report";
 import { formatDueDate } from "@/lib/reporting/format-display";
-import { synthesizeSentences } from "@/lib/reporting/synthesize-text";
+import { synthesizeBullets } from "@/lib/reporting/synthesize-text";
 import { summarizeOpportunity } from "@/lib/research/summarize-opportunity";
 import { scoreAcceptanceLikelihood } from "@/lib/scoring/acceptance-likelihood";
 import type { SolicitationRow } from "@/lib/solicitations/types";
@@ -52,7 +52,7 @@ async function buildOpportunity(
   const research = solicitation.link
     ? await fetchSolicitationResearch(solicitation)
     : emptyResearch("");
-  const profile = buildSolicitationProfile(solicitation, research);
+  const profile = await buildSolicitationProfile(solicitation, research);
   const acceptance = await scoreAcceptanceLikelihood(company, solicitation, profile);
   const summary = await summarizeOpportunity(
     company,
@@ -134,15 +134,15 @@ export async function runKeywordOpportunityAnalysis(
   const opportunity = await buildOpportunity(company, match);
   const report = await buildFinalReport(company, [opportunity], solicitations.length);
 
-  report.executiveSummary = synthesizeSentences([
-    `Closest catalog match for "${trimmed}" is ${displayTitle} (${solicitation.department}, due ${formatDueDate(solicitation.dueDate)}) at ${match.matchScore}% relevance.`,
-    `Estimated fit for a generic applicant is ${opportunity.acceptance.likelihoodScore}% (${opportunity.acceptance.likelihoodLabel.toLowerCase()}). Recommendation: ${opportunity.summary.tailored.pursuitRecommendation.toLowerCase()}.`,
-    "The brief below covers eligibility, funding, requirements, and tailored guidance for this opportunity.",
+  report.executiveSummary = synthesizeBullets([
+    `Best catalog match for "${trimmed}": ${displayTitle} (${solicitation.department}, due ${formatDueDate(solicitation.dueDate)}) — ${match.matchScore}% relevance.`,
+    `${opportunity.acceptance.likelihoodScore}% estimated fit (${opportunity.acceptance.likelihoodLabel}) — ${opportunity.summary.tailored.pursuitRecommendation}.`,
+    "See eligibility, funding, and application guidance below.",
   ]);
-  report.overallStrategy = synthesizeSentences([
-    `Review the official solicitation and confirm ${displayTitle} fits your capabilities.`,
-    "Build a compliance matrix against the stated requirements and validate your TRL against the expected maturity.",
-    "For a ranked list across the full catalog, run the company match.",
+  report.overallStrategy = synthesizeBullets([
+    `Download and review the official solicitation for ${displayTitle}.`,
+    "Build a compliance matrix and validate your TRL against expected maturity.",
+    "For ranked matches across the full catalog, run the company match flow.",
   ]);
 
   return {

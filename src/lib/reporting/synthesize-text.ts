@@ -1,33 +1,26 @@
-/** Turns bullet lists and fragmented snippets into readable prose. */
+/** Turns bullet lists and fragmented snippets into readable prose (legacy) or bullet lists (preferred). */
 
-function cleanBullet(text: string): string {
-  return text.replace(/^[\s•\-–—]+/, "").replace(/\s+/g, " ").trim();
-}
+import {
+  cleanBullet,
+  dedupeBullets,
+  ensurePeriod,
+  toBulletList,
+  truncateBullet,
+} from "./format-content";
 
-function ensurePeriod(text: string): string {
-  const t = text.trim();
-  if (!t) return "";
-  return /[.!?]$/.test(t) ? t : `${t}.`;
-}
+export { cleanBullet, dedupeBullets, ensurePeriod, toBulletList, truncateBullet };
 
-/** Merge sentences into flowing paragraphs, dropping near-duplicates. */
+/** Merge sentences into flowing paragraphs, dropping near-duplicates. Prefer toBulletList for reports. */
 export function synthesizeSentences(sentences: string[]): string {
-  const seen = new Set<string>();
-  const unique: string[] = [];
-
-  for (const raw of sentences) {
-    const sentence = ensurePeriod(cleanBullet(raw));
-    if (!sentence || sentence.length < 12) continue;
-    const key = sentence.toLowerCase().slice(0, 80);
-    if (seen.has(key)) continue;
-    seen.add(key);
-    unique.push(sentence);
-  }
-
+  const unique = dedupeBullets(sentences).map(ensurePeriod);
   if (unique.length === 0) return "";
   if (unique.length === 1) return unique[0];
-
   return unique.join(" ");
+}
+
+/** Build a scannable bullet list from sentence fragments — preferred for report sections. */
+export function synthesizeBullets(sentences: string[]): string {
+  return toBulletList(sentences);
 }
 
 /** Weave labeled content blocks into a single narrative with light section breaks. */
@@ -62,11 +55,11 @@ export function synthesizeNarrative(
   return result.join("\n\n");
 }
 
-/** Convert talking points into readable guidance — one sentence each, no awkward glue phrases. */
+/** Convert talking points into a bullet list — one actionable item per line. */
 export function synthesizeTalkingPoints(points: string[]): string {
   const cleaned = points
     .map((p) => p.replace(/^Action:\s*/i, "").trim())
     .filter(Boolean);
 
-  return synthesizeSentences(cleaned);
+  return toBulletList(cleaned);
 }
