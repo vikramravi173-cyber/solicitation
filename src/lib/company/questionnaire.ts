@@ -1,3 +1,5 @@
+import { CATALOG_META } from "@/data/solicitations";
+
 export interface CompanyProfile {
   technologyAndCapabilities: string;
   technologyReadinessLevel: string;
@@ -77,7 +79,7 @@ export const COMPANY_QUESTIONS: QuestionDefinition[] = [
     id: "technologyAndCapabilities",
     label: "What technologies and services does your company offer?",
     whyWeAsk:
-      "This is the primary signal we use to match you against 290+ solicitations. Vague answers like “innovative solutions” produce weak matches; specific technical language produces strong ones.",
+      `This is the primary signal we use to match you against ${CATALOG_META.count}+ solicitations. Vague answers like “innovative solutions” produce weak matches; specific technical language produces strong ones.`,
     howToAnswer:
       "Name your products or services, the technical domains you work in (e.g. batteries, photonics, autonomy), and what maturity level you can deliver today. Think: what would a program manager see on your capability brief?",
     placeholder:

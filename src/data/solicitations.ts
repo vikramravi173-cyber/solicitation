@@ -15,5 +15,6 @@ export const SOLICITATIONS: SolicitationRow[] = db.solicitations;
 export const CATALOG_META = {
   source: db.source,
   parsedAt: db.parsedAt,
-  count: db.count,
+  /** Always derived from bundled rows so stats cannot drift from the JSON `count` field. */
+  count: db.solicitations.length,
 };

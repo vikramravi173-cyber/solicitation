@@ -1,16 +1,17 @@
 # Solicitations Matcher
 
-A static web app that matches a company against federal solicitations from the
-**Gov Events & Opportunities** catalog, scores fit, and produces a printable
-pursuit dossier. Matching, scoring, and reporting run entirely in the browser —
-**no API keys, no backend.**
+A static web app that matches a company against federal solicitations, scores fit,
+and produces a printable pursuit dossier. Matching, scoring, and reporting run
+entirely in the browser — **no API keys, no backend.**
 
-**Live:** https://vikramravi173-cyber.github.io/solicitation/
+**Live (GitHub Pages):** https://vikramravi173-cyber.github.io/solicitation/
+
+> Do not use old Vercel preview URLs — this project deploys via GitHub Actions only.
 
 ## Stack
 
 - **Vite + React + TypeScript** (static SPA)
-- **Tailwind CSS** — "Capture Deck" design system (dark command-deck chrome, paper dossier)
+- **Tailwind CSS** — "Capture Deck" design system
 - **react-router-dom** — `/` catalog, `/match` questionnaire, `/report` dossier
 
 ## Quick start
@@ -20,53 +21,49 @@ npm install
 npm run dev        # http://localhost:5173
 ```
 
+After changing `data/solicitations.json`, restart dev or rebuild:
+
 ```bash
-npm run build      # static output in dist/
-npm run preview    # preview the production build
+npm run build
+npm run preview    # http://localhost:4173/solicitation/
 ```
 
 ## Data
 
-- `data/Gov_Events_Opportunities.pdf` — source catalog
-- `data/solicitations.json` — parsed catalog, bundled into the app
-- Re-parse after updating the PDF: `npm run parse-pdf`
+| File | Purpose |
+|---|---|
+| `data/Gov_Events_Opportunities.pdf` | Original DoD catalog source |
+| `data/grants-search.csv` | Grants.gov export |
+| `data/sbir-topics.csv` | SBIR.gov topics export |
+| `data/solicitations.json` | Bundled catalog (imported at build time) |
+
+Refresh the catalog:
+
+```bash
+npm run parse-pdf              # PDF → solicitations.json (replaces PDF rows)
+npm run import-grants          # merge grants.gov CSV
+npm run import-sbir-topics     # merge SBIR topics CSV
+npm run build                  # rebuild so the SPA picks up new rows
+```
 
 ## How it works
 
 | Step | Engine |
 |---|---|
-| Matching | Keyword overlap, agency fit, solicitation type, company flags |
+| Matching | Fuzzy text match, agency fit, solicitation type |
 | Profiles | Synthesized from catalog fields |
 | Estimated fit | Rule-based scoring from profile fit and risk flags |
 | Dossier | Ranked assembly of matches, scores, and tailored guidance |
 
-Scoring is a transparent prioritization signal — it surfaces and ranks
-opportunities, it does not predict award decisions.
-
-## Project structure
-
-```
-src/
-  pages/        # Home (catalog), Analyze (match), Report (dossier)
-  components/   # Registry, OpportunityDrawer, QuestionnaireForm, Seal, ...
-  lib/          # matching / scoring / reporting (pure, client-side)
-  data/         # bundled catalog
-  state/        # sessionStorage-backed analysis result
-```
-
-## Deployment (GitHub Pages)
+## Deployment (GitHub Pages only)
 
 Pushing to `main` or `cursor/initial-project-setup` runs
-`.github/workflows/deploy-pages.yml`, which builds the SPA and publishes `dist/`
-to GitHub Pages. No secrets required.
+`.github/workflows/deploy-pages.yml`, which builds fresh from source and publishes
+`dist/` to GitHub Pages. The committed `dist/` folder is not used.
 
 **One-time (repo admin):** Settings → Pages → **Source: GitHub Actions**.
 
-Routing notes:
-
-- `vite.config.ts` sets `base` to `/solicitation/` for production builds; the
-  router uses that as its `basename`.
-- The workflow copies `index.html` → `404.html` and adds `.nojekyll` so deep
-  links (`/match`, `/report`) resolve on direct load.
+- `vite.config.ts` sets `base` to `/solicitation/` for production builds.
+- The workflow copies `index.html` → `404.html` for client-side routing.
 
 > Renaming the repo? Update `REPO_BASE` in `vite.config.ts` to match.
